@@ -1,5 +1,10 @@
-export async function askTarif(query: string) {
-  const res = await fetch("http://localhost:3005/api/chat", {
+import { ChatApiResponse } from "@/types/chat";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
+
+export async function fetchChatCompare(query: string): Promise<ChatApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -8,11 +13,18 @@ export async function askTarif(query: string) {
       query,
       compareUnions: true,
     }),
+    cache: "no-store",
   });
 
-  if (!res.ok) {
-    throw new Error("API Fehler");
+  if (!response.ok) {
+    throw new Error(`API-Fehler: ${response.status}`);
   }
 
-  return res.json();
+  const data: ChatApiResponse = await response.json();
+
+  if (!data.ok) {
+    throw new Error("Backend hat keine gültige Antwort geliefert.");
+  }
+
+  return data;
 }

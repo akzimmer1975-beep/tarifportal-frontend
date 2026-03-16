@@ -1,3 +1,4 @@
+console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
 import CompareColumns from "@/components/results/CompareColumns";
 import CompareHeader from "@/components/results/CompareHeader";
 import SourcesSection from "@/components/results/SourcesSection";

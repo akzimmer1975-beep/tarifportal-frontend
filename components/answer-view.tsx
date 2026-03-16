@@ -1,4 +1,19 @@
 import { ChatApiResponse } from "@/types/tarif";
+import { BackHomeButton } from "@/components/back-home-button";
+import { SectionCard } from "@/components/section-card";
+import { SourcesList } from "@/components/sources-list";
+
+type AnswerViewProps = {
+  query: string;
+  result: ChatApiResponse;
+};
+
+export function AnswerView({ query, result }: AnswerViewProps) {
+  const structured = result.structured;
+  const unterschiede = structured?.unterschiede ?? [];
+  const gemeinsamkeiten = structured?.gemeinsamkeiten ?? [];
+  const gdlSources = result.sourcesByUnion?.GDL ?? [];
+  const evgSources = result.sourcesByUnion?.EVG ?? [];
   const allSources = result.sources ?? [];
 
   return (
@@ -7,7 +22,9 @@ import { ChatApiResponse } from "@/types/tarif";
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Tarifvergleichsportal</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">Antwort auf deine Tariffrage</h1>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight">
+              Antwort auf deine Tariffrage
+            </h1>
           </div>
           <BackHomeButton />
         </header>
@@ -40,7 +57,10 @@ import { ChatApiResponse } from "@/types/tarif";
           {unterschiede.length ? (
             <div className="space-y-3">
               {unterschiede.map((item, index) => (
-                <div key={`${item}-${index}`} className="rounded-2xl bg-gray-50 p-4 text-base leading-7 text-gray-800">
+                <div
+                  key={`${item}-${index}`}
+                  className="rounded-2xl bg-gray-50 p-4 text-base leading-7 text-gray-800"
+                >
                   {item}
                 </div>
               ))}
@@ -56,7 +76,10 @@ import { ChatApiResponse } from "@/types/tarif";
           {gemeinsamkeiten.length ? (
             <div className="space-y-3">
               {gemeinsamkeiten.map((item, index) => (
-                <div key={`${item}-${index}`} className="rounded-2xl bg-gray-50 p-4 text-base leading-7 text-gray-800">
+                <div
+                  key={`${item}-${index}`}
+                  className="rounded-2xl bg-gray-50 p-4 text-base leading-7 text-gray-800"
+                >
                   {item}
                 </div>
               ))}

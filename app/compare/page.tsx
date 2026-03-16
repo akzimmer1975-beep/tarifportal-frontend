@@ -22,6 +22,7 @@ export default async function ComparePage({
 
   try {
     const result = await askTarifQuestion(query);
+console.log("API RESULT:", JSON.stringify(result, null, 2));
     return <AnswerView query={query} result={result} />;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unbekannter Fehler";

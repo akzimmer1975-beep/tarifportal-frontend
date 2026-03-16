@@ -1,33 +1,29 @@
-export default function Home() {
+import SearchForm from "@/components/home/SearchForm";
+
+export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="max-w-2xl space-y-6 text-center">
-        <h1 className="text-4xl font-bold">
-          Tarifvergleich mit KI
-        </h1>
+    <main className="min-h-screen bg-zinc-50">
+      <div className="mx-auto flex max-w-5xl flex-col px-6 py-20">
+        <div className="max-w-3xl space-y-6">
+          <span className="inline-flex rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700">
+            Tarifvergleich mit KI
+          </span>
 
-        <p className="text-gray-600">
-          Stelle eine Frage zu Tarifverträgen und vergleiche
-          die Regelungen von GDL und EVG.
-        </p>
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-950 sm:text-5xl">
+            Tariffragen strukturiert vergleichen
+          </h1>
 
-        <form
-          action="/vergleichen"
-          className="flex flex-col gap-4"
-        >
-          <textarea
-            name="query"
-            placeholder="z. B. Welche Regelungen gelten für Ruhezeiten am Dienstort?"
-            className="rounded-lg border p-4"
-          />
+          <p className="text-lg leading-8 text-zinc-600">
+            Stelle eine Frage zu Tarifverträgen und erhalte eine strukturierte
+            Gegenüberstellung von GDL und EVG mit Kurzfazit, Unterschieden,
+            Gemeinsamkeiten und Quellen.
+          </p>
+        </div>
 
-          <button
-            className="rounded-lg bg-black px-6 py-3 text-white"
-          >
-            Tariffrage vergleichen
-          </button>
-        </form>
+        <div className="mt-10 max-w-3xl">
+          <SearchForm />
+        </div>
       </div>
     </main>
-  )
+  );
 }

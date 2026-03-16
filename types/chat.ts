@@ -4,24 +4,20 @@ export type SourceItem = {
   snippet?: string;
 };
 
-export type SourcesByUnion = {
-  GDL: SourceItem[];
-  EVG: SourceItem[];
-};
-
-export type ChatStructuredResponse = {
-  kurzfazit: string;
-  gdl: string;
-  evg: string;
-  unterschiede: string[];
-  gemeinsamkeiten: string[];
-};
-
-export type ChatApiResponse = {
+export type ChatResponse = {
   ok: boolean;
-  mode: "compare" | "answer";
+  mode: string;
   answer: string;
-  structured: ChatStructuredResponse;
+  structured: {
+    kurzfazit: string;
+    gdl: string;
+    evg: string;
+    unterschiede: string[];
+    gemeinsamkeiten: string[];
+  };
   sources: SourceItem[];
-  sourcesByUnion: SourcesByUnion;
+  sourcesByUnion: {
+    GDL: SourceItem[];
+    EVG: SourceItem[];
+  };
 };

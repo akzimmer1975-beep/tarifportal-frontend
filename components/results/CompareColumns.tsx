@@ -12,18 +12,14 @@ export default function CompareColumns({ gdl, evg }: CompareColumnsProps) {
         <div className="border-b border-zinc-200 pb-3">
           <h2 className="text-xl font-semibold text-zinc-950">GDL</h2>
         </div>
-        <p className="whitespace-pre-line leading-7 text-zinc-700">
-          {gdl || "Keine GDL-Angaben vorhanden."}
-        </p>
+        <p className="whitespace-pre-line leading-7 text-zinc-700">{gdl}</p>
       </Card>
 
       <Card className="space-y-4">
         <div className="border-b border-zinc-200 pb-3">
           <h2 className="text-xl font-semibold text-zinc-950">EVG</h2>
         </div>
-        <p className="whitespace-pre-line leading-7 text-zinc-700">
-          {evg || "Keine EVG-Angaben vorhanden."}
-        </p>
+        <p className="whitespace-pre-line leading-7 text-zinc-700">{evg}</p>
       </Card>
     </div>
   );

@@ -1,10 +1,13 @@
-import { ChatApiResponse } from "@/types/chat";
+import { ChatResponse } from "@/types/chat";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function fetchChatCompare(query: string): Promise<ChatApiResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/chat`, {
+export async function askTarif(query: string): Promise<ChatResponse> {
+  if (!API_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL ist nicht gesetzt.");
+  }
+
+  const response = await fetch(`${API_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -17,14 +20,9 @@ export async function fetchChatCompare(query: string): Promise<ChatApiResponse> 
   });
 
   if (!response.ok) {
-    throw new Error(`API-Fehler: ${response.status}`);
+    throw new Error(`API Fehler: ${response.status}`);
   }
 
-  const data: ChatApiResponse = await response.json();
-
-  if (!data.ok) {
-    throw new Error("Backend hat keine gültige Antwort geliefert.");
-  }
-
+  const data: ChatResponse = await response.json();
   return data;
 }

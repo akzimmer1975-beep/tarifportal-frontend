@@ -5,24 +5,19 @@ type CompareHeaderProps = {
   kurzfazit: string;
 };
 
-export default function CompareHeader({
-  query,
-  kurzfazit,
-}: CompareHeaderProps) {
+export default function CompareHeader({ query, kurzfazit }: CompareHeaderProps) {
   return (
     <Card className="space-y-4">
-      <div className="space-y-2">
+      <div>
         <p className="text-sm font-medium text-zinc-500">Tariffrage</p>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-zinc-950">
           {query}
         </h1>
       </div>
 
       <div className="rounded-xl bg-zinc-50 p-4">
         <p className="text-sm font-medium text-zinc-500">Kurzfazit</p>
-        <p className="mt-2 text-base leading-7 text-zinc-800">
-          {kurzfazit || "Kein Kurzfazit vorhanden."}
-        </p>
+        <p className="mt-2 leading-7 text-zinc-800">{kurzfazit}</p>
       </div>
     </Card>
   );

@@ -1,8 +1,9 @@
-import CompareColumns from "@/components/CompareColumns";
-import CompareHeader from "@/components/CompareHeader";
-import DifferencesList from "@/components/DifferencesList";
-import SimilaritiesList from "@/components/SimilaritiesList";
-import SourcesSection from "@/components/SourcesSection";
+import CompareColumns from "@/components/results/CompareColumns";
+import CompareHeader from "@/components/results/CompareHeader";
+import DifferencesList from "@/components/results/DifferencesList";
+import SimilaritiesList from "@/components/results/SimilaritiesList";
+import SourcesSection from "@/components/results/SourcesSection";
+import { BackHomeButton } from "@/components/back-home-button";
 import Card from "@/components/ui/Card";
 import type { ChatResponseBody, SourceItem } from "@/types/chat";
 
@@ -10,14 +11,6 @@ type AnswerViewProps = {
   query: string;
   result: ChatResponseBody;
 };
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <Card>
-      <p className="text-zinc-600">{text}</p>
-    </Card>
-  );
-}
 
 function SingleAnswerSection({ answer }: { answer: string }) {
   return (
@@ -46,7 +39,10 @@ function SingleSourcesSection({ sources }: { sources: SourceItem[] }) {
         ) : (
           <ul className="space-y-3">
             {sources.map((source, index) => (
-              <li key={`${source.document}-${source.page ?? "x"}-${index}`} className="rounded-xl bg-zinc-50 p-4">
+              <li
+                key={`${source.document}-${source.page ?? "x"}-${index}`}
+                className="rounded-xl bg-zinc-50 p-4"
+              >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <p className="font-medium text-zinc-900">{source.document}</p>
 
@@ -60,9 +56,13 @@ function SingleSourcesSection({ sources }: { sources: SourceItem[] }) {
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
                   {source.tarif ? <span>Tarif: {source.tarif}</span> : null}
                   {source.tarifType ? <span>Typ: {source.tarifType}</span> : null}
-                  {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
+                  {source.funktionsgruppe ? (
+                    <span>FG: {source.funktionsgruppe}</span>
+                  ) : null}
                   {source.page != null ? <span>Seite: {source.page}</span> : null}
-                  {source.paragraph != null ? <span>Abschnitt: {source.paragraph}</span> : null}
+                  {source.paragraph != null ? (
+                    <span>Abschnitt: {source.paragraph}</span>
+                  ) : null}
                   {source.similarity != null ? (
                     <span>Similarity: {source.similarity}</span>
                   ) : null}
@@ -103,6 +103,8 @@ export function AnswerView({ query, result }: AnswerViewProps) {
     return (
       <main className="min-h-screen bg-zinc-50 p-6">
         <div className="mx-auto max-w-6xl space-y-6">
+          <BackHomeButton />
+
           <Card className="space-y-4 border-amber-200 bg-amber-50">
             <div>
               <p className="text-sm font-medium text-amber-700">Tariffrage</p>
@@ -112,8 +114,8 @@ export function AnswerView({ query, result }: AnswerViewProps) {
             </div>
 
             <p className="leading-7 text-amber-900">
-              Für diese Anfrage wurde eine Einzelantwort statt einer Vergleichsantwort
-              geliefert. Die Inhalte werden deshalb in einer Fallback-Ansicht angezeigt.
+              Für diese Anfrage wurde eine Einzelantwort statt einer Vergleichsantwort geliefert.
+              Die Inhalte werden deshalb in einer Fallback-Ansicht angezeigt.
             </p>
           </Card>
 
@@ -127,6 +129,8 @@ export function AnswerView({ query, result }: AnswerViewProps) {
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-6xl space-y-6">
+        <BackHomeButton />
+
         <CompareHeader query={query} kurzfazit={structured.kurzfazit} />
 
         <CompareColumns gdl={structured.gdl} evg={structured.evg} />
@@ -140,10 +144,6 @@ export function AnswerView({ query, result }: AnswerViewProps) {
           gdlSources={sourcesByUnion.GDL}
           evgSources={sourcesByUnion.EVG}
         />
-
-        {sources.length === 0 ? (
-          <EmptyState text="Es wurden keine Quellen zur Antwort geliefert." />
-        ) : null}
       </div>
     </main>
   );

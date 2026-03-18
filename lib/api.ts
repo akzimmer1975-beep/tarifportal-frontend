@@ -1,14 +1,20 @@
 import { ChatApiResponse } from "@/types/tarif";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
 
-export async function askTarifQuestion(query: string): Promise<ChatApiResponse> {
+export async function askTarifQuestion(
+  query: string
+): Promise<ChatApiResponse> {
   const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ query })
+    body: JSON.stringify({
+      query,
+      compareUnions: true
+    })
   });
 
   const data = (await response.json()) as ChatApiResponse;

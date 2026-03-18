@@ -8,7 +8,7 @@ type SourcesSectionProps = {
 
 function SourceColumn({
   title,
-  sources,
+  sources
 }: {
   title: string;
   sources: SourceItem[];
@@ -22,20 +22,29 @@ function SourceColumn({
       ) : (
         <ul className="space-y-3">
           {sources.map((source, index) => (
-            <li key={index} className="rounded-xl bg-zinc-50 p-4">
-              <p className="font-medium text-zinc-900">{source.document_name}</p>
+            <li key={`${source.document}-${source.page ?? "x"}-${index}`} className="rounded-xl bg-zinc-50 p-4">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="font-medium text-zinc-900">{source.document}</p>
 
-              {source.snippet && (
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
-                  {source.snippet}
-                </p>
-              )}
+                {source.union ? (
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
+                    {source.union}
+                  </span>
+                ) : null}
+              </div>
 
-              {source.paragraph_id && (
-                <p className="mt-2 text-xs text-zinc-500">
-                  Paragraph-ID: {source.paragraph_id}
-                </p>
-              )}
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
+                {source.tarif ? <span>Tarif: {source.tarif}</span> : null}
+                {source.tarifType ? <span>Typ: {source.tarifType}</span> : null}
+                {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
+                {source.page != null ? <span>Seite: {source.page}</span> : null}
+                {source.paragraph != null ? <span>Abschnitt: {source.paragraph}</span> : null}
+                {source.similarity != null ? (
+                  <span>Similarity: {source.similarity}</span>
+                ) : null}
+              </div>
+
+              <p className="mt-3 text-sm leading-6 text-zinc-700">{source.text}</p>
             </li>
           ))}
         </ul>
@@ -46,7 +55,7 @@ function SourceColumn({
 
 export default function SourcesSection({
   gdlSources,
-  evgSources,
+  evgSources
 }: SourcesSectionProps) {
   return (
     <section className="space-y-4">

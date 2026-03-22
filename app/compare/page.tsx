@@ -1,7 +1,7 @@
 import CompareHeader from "@/components/results/CompareHeader";
 import CompareSections from "@/components/results/CompareSections";
 import SimilaritiesList from "@/components/results/SimilaritiesList";
-import { askTarif } from "@/lib/api";
+import { askTarifQuestion } from "@/lib/api";
 
 type ComparePageProps = {
   searchParams: Promise<{
@@ -29,9 +29,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   }
 
   try {
-    const result = await askTarif(query);
+    const result = await askTarifQuestion(query, {
+      compareUnions: true
+    });
 
-    const sections = Array.isArray(result.sections) ? result.sections : [];
+    const sections = result.sections ?? [];
 
     return (
       <main className="min-h-screen bg-zinc-50">
@@ -44,7 +46,17 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <CompareSections
             query={query}
             topicKey={result.structured?.topicKey}
-            sections={sections}
+            sections={sections.map((section) => ({
+              key: section.key,
+              title: section.title,
+              summary: section.summary,
+              gdlText: section.gdlText,
+              evgText: section.evgText,
+              gdlDifferences: section.gdlDifferences,
+              evgDifferences: section.evgDifferences,
+              gdlSources: section.gdlSources,
+              evgSources: section.evgSources
+            }))}
           />
 
           <SimilaritiesList items={result.structured?.gemeinsamkeiten || []} />
@@ -61,10 +73,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             Fehler beim Laden der Tarifantwort
           </h1>
           <p className="mt-2 text-red-800">
-            Die Anfrage an das Backend auf Render konnte nicht erfolgreich verarbeitet werden.
+            Die Anfrage an das Backend konnte nicht erfolgreich verarbeitet werden.
           </p>
           <p className="mt-2 text-sm text-red-700">
-            Prüfe die API-URL, CORS und ob dein Render-Service aktiv ist.
+            Prüfe API-URL, CORS und ob dein Backend aktiv ist.
           </p>
         </div>
       </main>

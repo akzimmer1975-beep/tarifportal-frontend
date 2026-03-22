@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import SourceModal from "./SourceModal";
-import { SourceItem } from "@/types/chat";
+import type { SourceItem } from "@/types/chat";
 
 type SourcesSectionProps = {
   query: string;
@@ -37,7 +37,9 @@ function SourceColumn({
               className="rounded-xl bg-zinc-50 p-4"
             >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="font-medium text-zinc-900">{source.document}</p>
+                <p className="text-base font-semibold text-zinc-950">
+                  {source.document}
+                </p>
 
                 {source.union ? (
                   <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
@@ -55,7 +57,7 @@ function SourceColumn({
                 {source.similarity != null ? <span>Similarity: {source.similarity}</span> : null}
               </div>
 
-              <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">
+              <p className="mt-3 line-clamp-4 text-sm italic leading-6 text-zinc-700">
                 {source.text}
               </p>
 
@@ -63,9 +65,9 @@ function SourceColumn({
                 <button
                   type="button"
                   onClick={() => onOpen(source)}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
                 >
-                  Tariftext lesen
+                  Tarifstelle anzeigen
                 </button>
               </div>
             </li>

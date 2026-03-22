@@ -1,32 +1,48 @@
-export type SourceItem = {
+export type UnionName = "GDL" | "EVG";
+
+export interface SourceItem {
   document: string;
-  union?: string | null;
+  union: string | null;
   tarif?: string | null;
   tarifType?: string | null;
   funktionsgruppe?: string | null;
   page?: number | null;
   paragraph?: number | null;
   text: string;
-  similarity?: number;
-};
+  similarity?: number | null;
+}
 
-export type StructuredCompareAnswer = {
+export interface StructuredCompareSection {
+  key: string;
+  title: string;
+  summary?: string;
+  gdlText: string;
+  evgText: string;
+  gdlDifferences: string[];
+  evgDifferences: string[];
+  gdlSources: SourceItem[];
+  evgSources: SourceItem[];
+}
+
+export interface StructuredCompareAnswer {
   kurzfazit: string;
-  gdl: string;
-  evg: string;
-  unterschiede: string[];
-  gemeinsamkeiten: string[];
-};
+  topicKey?: string;
+  gdl?: string;
+  evg?: string;
+  unterschiede?: string[];
+  gemeinsamkeiten?: string[];
+  sections?: StructuredCompareSection[];
+}
 
-export type ChatResponseBody = {
-  mode: "single" | "compare";
+export interface ChatResponseBody {
+  ok?: boolean;
   answer: string;
-  structured?: StructuredCompareAnswer;
   sources: SourceItem[];
+  mode?: "single" | "compare";
+  structured?: StructuredCompareAnswer;
+  sections?: StructuredCompareSection[];
   sourcesByUnion?: {
     GDL: SourceItem[];
     EVG: SourceItem[];
   };
-};
-
-export type UnionName = "GDL" | "EVG";
+}

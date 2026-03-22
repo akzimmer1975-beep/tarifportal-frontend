@@ -8,10 +8,7 @@ type CompareHeaderProps = {
   kurzfazit: string;
 };
 
-export default function CompareHeader({
-  query,
-  kurzfazit
-}: CompareHeaderProps) {
+export default function CompareHeader({ query, kurzfazit }: CompareHeaderProps) {
   const router = useRouter();
 
   return (

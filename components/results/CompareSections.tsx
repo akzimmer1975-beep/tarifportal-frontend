@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Card from "@/components/ui/Card";
 import SourcesSection from "./SourcesSection";
 import type { SourceItem } from "@/types/chat";
@@ -51,37 +52,46 @@ function DifferenceBlock({
   );
 }
 
-export default function CompareSections({
+function AccordionSection({
   query,
   topicKey,
-  sections
-}: CompareSectionsProps) {
-  if (!sections || sections.length === 0) {
-    return (
-      <Card>
-        <p className="text-zinc-500">Keine Unterrubriken vorhanden.</p>
-      </Card>
-    );
-  }
+  section,
+  index
+}: {
+  query: string;
+  topicKey?: string;
+  section: CompareSubsection;
+  index: number;
+}) {
+  const [open, setOpen] = useState(index === 0);
 
   return (
-    <div className="space-y-8">
-      {sections.map((section, index) => (
-        <section key={section.key} className="space-y-4">
-          <Card className="space-y-4 border-2 border-zinc-200">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
-                {index + 1}
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-zinc-500">Unterrubrik</p>
-                <h2 className="text-xl font-semibold tracking-tight text-zinc-950">
-                  {section.title}
-                </h2>
-              </div>
+    <section className="space-y-4">
+      <Card className="overflow-hidden border-2 border-zinc-200">
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-zinc-50"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
+              {index + 1}
             </div>
+            <div>
+              <p className="text-sm font-medium text-zinc-500">Unterrubrik</p>
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-950">
+                {section.title}
+              </h2>
+            </div>
+          </div>
 
+          <span className="text-sm font-medium text-zinc-600">
+            {open ? "Einklappen" : "Aufklappen"}
+          </span>
+        </button>
+
+        {open ? (
+          <div className="space-y-4 border-t border-zinc-200 p-5">
             {section.summary ? (
               <div className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
                 <p className="text-sm font-medium text-amber-800">
@@ -124,17 +134,45 @@ export default function CompareSections({
                 />
               </Card>
             </div>
-          </Card>
 
-          <SourcesSection
-            query={query}
-            topicKey={topicKey}
-            sectionKey={section.key}
-            title={`Tarifquellen – ${section.title}`}
-            gdlSources={section.gdlSources ?? []}
-            evgSources={section.evgSources ?? []}
-          />
-        </section>
+            <SourcesSection
+              query={query}
+              topicKey={topicKey}
+              sectionKey={section.key}
+              title={`Tarifquellen – ${section.title}`}
+              gdlSources={section.gdlSources ?? []}
+              evgSources={section.evgSources ?? []}
+            />
+          </div>
+        ) : null}
+      </Card>
+    </section>
+  );
+}
+
+export default function CompareSections({
+  query,
+  topicKey,
+  sections
+}: CompareSectionsProps) {
+  if (!sections || sections.length === 0) {
+    return (
+      <Card>
+        <p className="text-zinc-500">Keine Unterrubriken vorhanden.</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {sections.map((section, index) => (
+        <AccordionSection
+          key={section.key}
+          query={query}
+          topicKey={topicKey}
+          section={section}
+          index={index}
+        />
       ))}
     </div>
   );

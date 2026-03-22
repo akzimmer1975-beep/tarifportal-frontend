@@ -1,105 +1,73 @@
-"use client";
+import CompareHeader from "@/components/results/CompareHeader";
+import CompareSections from "@/components/results/CompareSections";
+import SimilaritiesList from "@/components/results/SimilaritiesList";
+import { askTarif } from "@/lib/api";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { askTarifQuestion } from "@/lib/api";
+type ComparePageProps = {
+  searchParams: Promise<{
+    query?: string;
+  }>;
+};
 
-export default function ComparePage() {
-  const searchParams = useSearchParams();
-  const query = searchParams.get("query") || "";
+export default async function ComparePage({ searchParams }: ComparePageProps) {
+  const params = await searchParams;
+  const query = params.query?.trim() || "";
 
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!query) return;
-
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const result = await askTarifQuestion(query);
-        setData(result);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [query]);
-
-  if (loading) {
-    return <div className="p-6">🔄 Lade Antwort...</div>;
+  if (!query) {
+    return (
+      <main className="min-h-screen bg-zinc-50 px-6 py-10">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <h1 className="text-xl font-semibold text-amber-900">
+            Keine Tariffrage angegeben
+          </h1>
+          <p className="mt-2 text-amber-800">
+            Bitte gehe zurück zur Startseite und gib eine Frage ein.
+          </p>
+        </div>
+      </main>
+    );
   }
 
-  if (error) {
-    return <div className="p-6 text-red-600">❌ {error}</div>;
+  try {
+    const result = await askTarif(query);
+
+    const sections = result.structured?.sections ?? [];
+
+    return (
+      <main className="min-h-screen bg-zinc-50">
+        <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
+          <CompareHeader
+            query={query}
+            kurzfazit={result.structured?.kurzfazit || "Kein Kurzfazit vorhanden."}
+          />
+
+          <CompareSections
+            query={query}
+            topicKey={result.structured?.topicKey}
+            sections={sections}
+          />
+
+          <SimilaritiesList items={result.structured?.gemeinsamkeiten || []} />
+        </div>
+      </main>
+    );
+  } catch (error) {
+    console.error(error);
+
+    return (
+      <main className="min-h-screen bg-zinc-50 px-6 py-10">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-red-200 bg-red-50 p-6">
+          <h1 className="text-xl font-semibold text-red-900">
+            Fehler beim Laden der Tarifantwort
+          </h1>
+          <p className="mt-2 text-red-800">
+            Die Anfrage an das Backend auf Render konnte nicht erfolgreich verarbeitet werden.
+          </p>
+          <p className="mt-2 text-sm text-red-700">
+            Prüfe die API-URL, CORS und ob dein Render-Service aktiv ist.
+          </p>
+        </div>
+      </main>
+    );
   }
-
-  if (!data) return null;
-
-  const structured = data.structured;
-
-  return (
-    <main className="min-h-screen p-6">
-      <div className="mx-auto max-w-5xl space-y-6">
-
-        {/* Frage */}
-        <div className="rounded-2xl border p-4 bg-gray-50">
-          <p className="text-sm text-gray-500">Deine Frage</p>
-          <p className="font-medium">{query}</p>
-        </div>
-
-        {/* Kurzfazit */}
-        <div className="rounded-2xl border p-6 bg-white shadow-sm">
-          <h2 className="text-xl font-bold mb-2">📌 Kurzfazit</h2>
-          <p>{structured?.kurzfazit}</p>
-        </div>
-
-        {/* Vergleich */}
-        <div className="grid md:grid-cols-2 gap-6">
-
-          {/* GDL */}
-          <div className="rounded-2xl border p-6 bg-blue-50">
-            <h3 className="font-bold mb-2">GDL</h3>
-            <p>{structured?.gdl}</p>
-          </div>
-
-          {/* EVG */}
-          <div className="rounded-2xl border p-6 bg-green-50">
-            <h3 className="font-bold mb-2">EVG</h3>
-            <p>{structured?.evg}</p>
-          </div>
-
-        </div>
-
-        {/* Unterschiede */}
-        {structured?.unterschiede?.length > 0 && (
-          <div className="rounded-2xl border p-6 bg-white">
-            <h3 className="font-bold mb-3">⚖️ Unterschiede</h3>
-            <ul className="list-disc pl-5 space-y-2">
-              {structured.unterschiede.map((u: string, i: number) => (
-                <li key={i}>{u}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Gemeinsamkeiten */}
-        {structured?.gemeinsamkeiten?.length > 0 && (
-          <div className="rounded-2xl border p-6 bg-white">
-            <h3 className="font-bold mb-3">🤝 Gemeinsamkeiten</h3>
-            <ul className="list-disc pl-5 space-y-2">
-              {structured.gemeinsamkeiten.map((g: string, i: number) => (
-                <li key={i}>{g}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-      </div>
-    </main>
-  );
 }

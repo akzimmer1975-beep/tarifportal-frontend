@@ -56,6 +56,14 @@ export default function CompareSections({
   topicKey,
   sections
 }: CompareSectionsProps) {
+  if (!sections || sections.length === 0) {
+    return (
+      <Card>
+        <p className="text-zinc-500">Keine Unterrubriken vorhanden.</p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {sections.map((section, index) => (
@@ -76,8 +84,12 @@ export default function CompareSections({
 
             {section.summary ? (
               <div className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-                <p className="text-sm font-medium text-amber-800">Kurzfazit zur Unterrubrik</p>
-                <p className="mt-2 text-sm leading-6 text-amber-950">{section.summary}</p>
+                <p className="text-sm font-medium text-amber-800">
+                  Kurzfazit zur Unterrubrik
+                </p>
+                <p className="mt-2 text-sm leading-6 text-amber-950">
+                  {section.summary}
+                </p>
               </div>
             ) : null}
 

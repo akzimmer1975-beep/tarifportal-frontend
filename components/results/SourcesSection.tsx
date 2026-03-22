@@ -1,17 +1,27 @@
+"use client";
+
+import { useState } from "react";
 import Card from "@/components/ui/Card";
+import SourceModal from "./SourceModal";
 import { SourceItem } from "@/types/chat";
 
 type SourcesSectionProps = {
+  query: string;
+  topicKey?: string;
+  sectionKey?: string;
+  title?: string;
   gdlSources: SourceItem[];
   evgSources: SourceItem[];
 };
 
 function SourceColumn({
   title,
-  sources
+  sources,
+  onOpen
 }: {
   title: string;
   sources: SourceItem[];
+  onOpen: (source: SourceItem) => void;
 }) {
   return (
     <Card className="space-y-4">
@@ -22,7 +32,10 @@ function SourceColumn({
       ) : (
         <ul className="space-y-3">
           {sources.map((source, index) => (
-            <li key={`${source.document}-${source.page ?? "x"}-${index}`} className="rounded-xl bg-zinc-50 p-4">
+            <li
+              key={`${source.document}-${source.page ?? "x"}-${index}`}
+              className="rounded-xl bg-zinc-50 p-4"
+            >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <p className="font-medium text-zinc-900">{source.document}</p>
 
@@ -39,12 +52,22 @@ function SourceColumn({
                 {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
                 {source.page != null ? <span>Seite: {source.page}</span> : null}
                 {source.paragraph != null ? <span>Abschnitt: {source.paragraph}</span> : null}
-                {source.similarity != null ? (
-                  <span>Similarity: {source.similarity}</span>
-                ) : null}
+                {source.similarity != null ? <span>Similarity: {source.similarity}</span> : null}
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-zinc-700">{source.text}</p>
+              <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">
+                {source.text}
+              </p>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => onOpen(source)}
+                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+                >
+                  Tariftext lesen
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -54,19 +77,44 @@ function SourceColumn({
 }
 
 export default function SourcesSection({
+  query,
+  topicKey,
+  sectionKey,
+  title = "Quellen",
   gdlSources,
   evgSources
 }: SourcesSectionProps) {
-  return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold tracking-tight text-zinc-950">
-        Quellen
-      </h2>
+  const [selectedSource, setSelectedSource] = useState<SourceItem | null>(null);
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SourceColumn title="GDL-Quellen" sources={gdlSources} />
-        <SourceColumn title="EVG-Quellen" sources={evgSources} />
-      </div>
-    </section>
+  return (
+    <>
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-950">
+          {title}
+        </h2>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SourceColumn
+            title="GDL-Quellen"
+            sources={gdlSources}
+            onOpen={setSelectedSource}
+          />
+          <SourceColumn
+            title="EVG-Quellen"
+            sources={evgSources}
+            onOpen={setSelectedSource}
+          />
+        </div>
+      </section>
+
+      <SourceModal
+        open={!!selectedSource}
+        onClose={() => setSelectedSource(null)}
+        query={query}
+        topicKey={topicKey}
+        sectionKey={sectionKey}
+        source={selectedSource}
+      />
+    </>
   );
 }

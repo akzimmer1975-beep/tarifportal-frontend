@@ -31,7 +31,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   try {
     const result = await askTarif(query);
 
-    const sections = result.structured?.sections ?? [];
+    const sections = Array.isArray(result.sections) ? result.sections : [];
 
     return (
       <main className="min-h-screen bg-zinc-50">

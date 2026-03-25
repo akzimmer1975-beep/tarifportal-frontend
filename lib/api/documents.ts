@@ -1,10 +1,10 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
 
 export type ApiDocument = {
   id: number;
   item_id: string;
   name: string;
+  path: string;
   union_name: string | null;
   tarif_type: string | null;
   tariffwerk: string | null;
@@ -18,10 +18,7 @@ export type ApiParagraph = {
 };
 
 export async function getDocuments() {
-  const res = await fetch(`${API_BASE}/api/documents`, {
-    cache: "no-store"
-  });
-
+  const res = await fetch(`${API_BASE}/api/documents`);
   const data = await res.json();
 
   if (!res.ok || !data.ok) {
@@ -36,10 +33,7 @@ export async function getDocuments() {
 }
 
 export async function getParagraphs(itemId: string) {
-  const res = await fetch(`${API_BASE}/api/documents/${itemId}/paragraphs`, {
-    cache: "no-store"
-  });
-
+  const res = await fetch(`${API_BASE}/api/documents/${itemId}/paragraphs`);
   const data = await res.json();
 
   if (!res.ok || !data.ok) {
@@ -48,7 +42,6 @@ export async function getParagraphs(itemId: string) {
 
   return data as {
     ok: true;
-    itemId: string;
     count: number;
     paragraphs: ApiParagraph[];
   };

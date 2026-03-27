@@ -6,7 +6,8 @@ import {
   getDocuments,
   getParagraphs,
   type ApiDocument,
-  type ApiParagraph
+  type ApiParagraph,
+  type ApiParagraphSection
 } from "@/lib/api/documents";
 import type { SourceItem } from "@/types/chat";
 
@@ -49,11 +50,43 @@ function formatSimilarity(value?: number | null) {
 }
 
 function makeParagraphKey(paragraph: ApiParagraph) {
-  return `${paragraph.page_number ?? "x"}-${paragraph.paragraph_index ?? "x"}`;
+  return `${paragraph.page_number ?? "x"}-${paragraph.paragraph_index ?? "x"}-${paragraph.title ?? "no-title"}`;
 }
 
 function normalizeSelectedText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
+}
+
+function getTariffType(doc: ApiDocument | null): string | null {
+  if (!doc) return null;
+  return doc.tariff_type ?? doc.tarif_type ?? null;
+}
+
+function getParagraphTitle(paragraph: ApiParagraph): string {
+  if (paragraph.title?.trim()) return paragraph.title.trim();
+
+  const firstLine = paragraph.full_text.split("\n")[0]?.trim() ?? "";
+  if (firstLine) return firstLine;
+
+  return "Ohne Überschrift";
+}
+
+function getParagraphLabel(paragraph: ApiParagraph): string {
+  const pageLabel = `Seite ${paragraph.page_number ?? "—"}`;
+  const paragraphLabel = `Block ${paragraph.paragraph_index ?? "—"}`;
+  const title = getParagraphTitle(paragraph);
+
+  return `${pageLabel} · ${paragraphLabel} · ${title}`;
+}
+
+function getSectionPreview(section: ApiParagraphSection): string {
+  const cleaned = section.text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= 140) return cleaned;
+  return `${cleaned.slice(0, 140)}…`;
+}
+
+function getSectionDisplayLabel(section: ApiParagraphSection): string {
+  return `${section.label} · ${getSectionPreview(section)}`;
 }
 
 export default function SourceModal({
@@ -78,6 +111,7 @@ export default function SourceModal({
   const [paragraphsLoading, setParagraphsLoading] = useState(false);
 
   const [selectedParagraphKey, setSelectedParagraphKey] = useState("");
+  const [selectedSectionId, setSelectedSectionId] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [customComment, setCustomComment] = useState("");
 
@@ -144,6 +178,7 @@ export default function SourceModal({
     if (!selectedItemId) {
       setParagraphs([]);
       setSelectedParagraphKey("");
+      setSelectedSectionId("");
       setSelectedText("");
       return;
     }
@@ -155,6 +190,7 @@ export default function SourceModal({
         setParagraphsLoading(true);
         setMessage(null);
         setSelectedParagraphKey("");
+        setSelectedSectionId("");
         setSelectedText("");
 
         const data = await getParagraphs(selectedItemId);
@@ -191,6 +227,21 @@ export default function SourceModal({
     [paragraphs, selectedParagraphKey]
   );
 
+  const selectedSection = useMemo(
+    () =>
+      selectedParagraph?.sections.find((section) => section.id === selectedSectionId) ??
+      null,
+    [selectedParagraph, selectedSectionId]
+  );
+
+  const selectedSectionIndex = useMemo(() => {
+    if (!selectedParagraph || !selectedSection) return null;
+    const idx = selectedParagraph.sections.findIndex(
+      (section) => section.id === selectedSection.id
+    );
+    return idx >= 0 ? idx : null;
+  }, [selectedParagraph, selectedSection]);
+
   const paragraphLabel = useMemo(() => formatParagraphLabel(source), [source]);
 
   const displayFullText = source?.fullText || source?.text || "";
@@ -204,6 +255,7 @@ export default function SourceModal({
     setSelectedItemId("");
     setParagraphs([]);
     setSelectedParagraphKey("");
+    setSelectedSectionId("");
     setSelectedText("");
     setCustomComment("");
   }
@@ -245,7 +297,8 @@ export default function SourceModal({
 
     const containsAnchor =
       !!anchorNode && paragraphTextRef.current.contains(anchorNode);
-    const containsFocus = !!focusNode && paragraphTextRef.current.contains(focusNode);
+    const containsFocus =
+      !!focusNode && paragraphTextRef.current.contains(focusNode);
 
     if (!containsAnchor || !containsFocus) {
       return;
@@ -303,11 +356,20 @@ export default function SourceModal({
     }
 
     if (!selectedParagraph) {
-      setMessage("Bitte zuerst einen Paragraphen auswählen.");
+      setMessage("Bitte zuerst einen Paragraphenblock auswählen.");
       return;
     }
 
-    const textToSave = selectedText || selectedParagraph.full_text;
+    let textToSave = selectedParagraph.full_text;
+    let sectionIndexToSave: number | null = null;
+
+    if (selectedText) {
+      textToSave = selectedText;
+      sectionIndexToSave = null;
+    } else if (selectedSection) {
+      textToSave = selectedSection.text;
+      sectionIndexToSave = selectedSectionIndex;
+    }
 
     if (!textToSave.trim()) {
       setMessage("Es konnte kein Text zum Speichern ermittelt werden.");
@@ -327,24 +389,26 @@ export default function SourceModal({
         source: {
           documentName: selectedDocument.name,
           unionName: selectedDocument.union_name,
-          tarifType: selectedDocument.tarif_type,
+          tarifType: getTariffType(selectedDocument),
           tariffwerk: selectedDocument.tariffwerk,
           funktionsgruppe: selectedDocument.funktionsgruppe,
           pageNumber: selectedParagraph.page_number ?? null,
           paragraphIndex: selectedParagraph.paragraph_index ?? null,
           text: textToSave,
           fullText: selectedParagraph.full_text,
-          sectionIndex: null,
+          sectionIndex: sectionIndexToSave,
           similarity: null
         },
         userComment: customComment.trim() || undefined
       });
 
-      setMessage(
-        selectedText
-          ? "Markierte Textstelle als bevorzugte Quelle gespeichert."
-          : "Ganzer Paragraph als bevorzugte Quelle gespeichert."
-      );
+      if (selectedText) {
+        setMessage("Markierte Textstelle als bevorzugte Quelle gespeichert.");
+      } else if (selectedSection) {
+        setMessage("Unterpunkt als bevorzugte Quelle gespeichert.");
+      } else {
+        setMessage("Ganzer Paragraphenblock als bevorzugte Quelle gespeichert.");
+      }
 
       resetSelectMode();
     } catch (error) {
@@ -527,8 +591,9 @@ export default function SourceModal({
                     Bessere Quelle auswählen
                   </h4>
                   <p className="mt-1 text-sm text-slate-500">
-                    Du kannst eine vorhandene Quelle auswählen oder direkt selbst
-                    eine Quelle eintragen.
+                    Wähle zuerst den passenden Tarifvertrag, dann den gesamten
+                    Paragraphenblock und optional einen Unterpunkt. Alternativ kannst
+                    du direkt im Volltext die richtige Stelle markieren.
                   </p>
                 </div>
 
@@ -590,11 +655,14 @@ export default function SourceModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Paragraph / Textblock</label>
+                      <label className="text-sm font-medium">
+                        Paragraph / Tarifblock
+                      </label>
                       <select
                         value={selectedParagraphKey}
                         onChange={(e) => {
                           setSelectedParagraphKey(e.target.value);
+                          setSelectedSectionId("");
                           setSelectedText("");
                         }}
                         className="w-full rounded-xl border px-3 py-2 text-sm"
@@ -605,24 +673,52 @@ export default function SourceModal({
                             ? "Lade Paragraphen ..."
                             : "Bitte auswählen"}
                         </option>
-                        {paragraphs.map((p, index) => (
+                        {paragraphs.map((paragraph) => (
                           <option
-                            key={`${makeParagraphKey(p)}-${index}`}
-                            value={makeParagraphKey(p)}
+                            key={makeParagraphKey(paragraph)}
+                            value={makeParagraphKey(paragraph)}
                           >
-                            Seite {p.page_number ?? "—"} · Paragraph / Absatz{" "}
-                            {p.paragraph_index ?? "—"}
+                            {getParagraphLabel(paragraph)}
                           </option>
                         ))}
                       </select>
                     </div>
 
                     {selectedParagraph ? (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          Unterpunkt im Paragraphen
+                        </label>
+                        <select
+                          value={selectedSectionId}
+                          onChange={(e) => {
+                            setSelectedSectionId(e.target.value);
+                            setSelectedText("");
+                          }}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          disabled={loading}
+                        >
+                          <option value="">Ganzen Paragraphenblock verwenden</option>
+                          {selectedParagraph.sections.map((section) => (
+                            <option key={section.id} value={section.id}>
+                              {getSectionDisplayLabel(section)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : null}
+
+                    {selectedParagraph ? (
                       <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-medium text-slate-800">
-                            Tariftext
-                          </p>
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">
+                              Kompletter Tariftext des gewählten Blocks
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {getParagraphLabel(selectedParagraph)}
+                            </p>
+                          </div>
 
                           <button
                             type="button"
@@ -635,9 +731,8 @@ export default function SourceModal({
                         </div>
 
                         <p className="text-xs text-slate-500">
-                          Du kannst im Text mit der Maus die passende Stelle
-                          markieren. Wenn nichts markiert ist, wird beim Speichern
-                          der ganze Paragraph übernommen.
+                          Markiere bei Bedarf direkt die passende Stelle im Text. Eine
+                          Markierung hat Vorrang vor der Unterpunkt-Auswahl.
                         </p>
 
                         <div
@@ -646,6 +741,17 @@ export default function SourceModal({
                           className="max-h-[28rem] overflow-y-auto rounded-xl border bg-white p-4 text-sm leading-7 text-slate-800 whitespace-pre-wrap cursor-text select-text"
                         >
                           {selectedParagraph.full_text || "Kein Text vorhanden."}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {selectedSection ? (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <p className="mb-2 text-sm font-medium text-emerald-900">
+                          Gewählter Unterpunkt: {selectedSection.label}
+                        </p>
+                        <div className="whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                          {selectedSection.text}
                         </div>
                       </div>
                     ) : null}
@@ -659,14 +765,14 @@ export default function SourceModal({
                           {selectedText}
                         </div>
                       </div>
-                    ) : selectedParagraph ? (
+                    ) : selectedParagraph && !selectedSection ? (
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <p className="mb-2 text-sm font-medium text-slate-800">
                           Hinweis
                         </p>
                         <div className="text-sm leading-7 text-slate-600">
-                          Aktuell ist keine Textstelle markiert. Beim Speichern wird
-                          der gesamte ausgewählte Paragraph verwendet.
+                          Aktuell ist kein Unterpunkt und keine Textstelle ausgewählt.
+                          Beim Speichern wird der ganze Paragraphenblock verwendet.
                         </div>
                       </div>
                     ) : null}
@@ -690,7 +796,9 @@ export default function SourceModal({
                     >
                       {selectedText
                         ? "Markierte Quelle speichern"
-                        : "Ganzen Paragraphen speichern"}
+                        : selectedSection
+                          ? "Unterpunkt speichern"
+                          : "Ganzen Paragraphenblock speichern"}
                     </button>
                   </form>
                 ) : (
@@ -702,7 +810,7 @@ export default function SourceModal({
                         value={manualDoc}
                         onChange={(e) => setManualDoc(e.target.value)}
                         className="w-full rounded-xl border px-3 py-2 text-sm"
-                        placeholder="z. B. GDL_LfTV_..."
+                        placeholder="z. B. GDL_ZubTV_..."
                         disabled={loading}
                       />
                     </div>
@@ -741,7 +849,7 @@ export default function SourceModal({
                           value={manualTariffwerk}
                           onChange={(e) => setManualTariffwerk(e.target.value)}
                           className="w-full rounded-xl border px-3 py-2 text-sm"
-                          placeholder="z. B. LfTV"
+                          placeholder="z. B. ZubTV"
                           disabled={loading}
                         />
                       </div>

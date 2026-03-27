@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { sendFeedback } from "@/lib/api/feedback";
 import {
   getDocuments,
   getParagraphs,
   type ApiDocument,
-  type ApiParagraph,
-  type ApiParagraphSection
+  type ApiParagraph
 } from "@/lib/api/documents";
 import type { SourceItem } from "@/types/chat";
 
@@ -53,6 +52,10 @@ function makeParagraphKey(paragraph: ApiParagraph) {
   return `${paragraph.page_number ?? "x"}-${paragraph.paragraph_index ?? "x"}`;
 }
 
+function normalizeSelectedText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
 export default function SourceModal({
   open,
   onClose,
@@ -75,7 +78,7 @@ export default function SourceModal({
   const [paragraphsLoading, setParagraphsLoading] = useState(false);
 
   const [selectedParagraphKey, setSelectedParagraphKey] = useState("");
-  const [selectedSectionId, setSelectedSectionId] = useState("");
+  const [selectedText, setSelectedText] = useState("");
   const [customComment, setCustomComment] = useState("");
 
   const [manualDoc, setManualDoc] = useState("");
@@ -87,6 +90,8 @@ export default function SourceModal({
   const [manualParagraph, setManualParagraph] = useState("");
   const [manualText, setManualText] = useState("");
   const [manualComment, setManualComment] = useState("");
+
+  const paragraphTextRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -139,7 +144,7 @@ export default function SourceModal({
     if (!selectedItemId) {
       setParagraphs([]);
       setSelectedParagraphKey("");
-      setSelectedSectionId("");
+      setSelectedText("");
       return;
     }
 
@@ -150,7 +155,7 @@ export default function SourceModal({
         setParagraphsLoading(true);
         setMessage(null);
         setSelectedParagraphKey("");
-        setSelectedSectionId("");
+        setSelectedText("");
 
         const data = await getParagraphs(selectedItemId);
 
@@ -186,22 +191,6 @@ export default function SourceModal({
     [paragraphs, selectedParagraphKey]
   );
 
-  const selectedSection = useMemo(
-    () =>
-      selectedParagraph?.sections.find(
-        (section) => section.id === selectedSectionId
-      ) ?? null,
-    [selectedParagraph, selectedSectionId]
-  );
-
-  const selectedSectionIndex = useMemo(() => {
-    if (!selectedParagraph || !selectedSection) return null;
-    const idx = selectedParagraph.sections.findIndex(
-      (section) => section.id === selectedSection.id
-    );
-    return idx >= 0 ? idx : null;
-  }, [selectedParagraph, selectedSection]);
-
   const paragraphLabel = useMemo(() => formatParagraphLabel(source), [source]);
 
   const displayFullText = source?.fullText || source?.text || "";
@@ -215,7 +204,7 @@ export default function SourceModal({
     setSelectedItemId("");
     setParagraphs([]);
     setSelectedParagraphKey("");
-    setSelectedSectionId("");
+    setSelectedText("");
     setCustomComment("");
   }
 
@@ -229,6 +218,40 @@ export default function SourceModal({
     setManualParagraph("");
     setManualText("");
     setManualComment("");
+  }
+
+  function clearCurrentSelection() {
+    setSelectedText("");
+
+    if (typeof window !== "undefined") {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+    }
+  }
+
+  function handleParagraphTextSelection() {
+    if (!paragraphTextRef.current) return;
+
+    const selection = window.getSelection();
+    const rawText = selection?.toString() ?? "";
+    const normalizedText = normalizeSelectedText(rawText);
+
+    if (!normalizedText) {
+      return;
+    }
+
+    const anchorNode = selection?.anchorNode;
+    const focusNode = selection?.focusNode;
+
+    const containsAnchor =
+      !!anchorNode && paragraphTextRef.current.contains(anchorNode);
+    const containsFocus = !!focusNode && paragraphTextRef.current.contains(focusNode);
+
+    if (!containsAnchor || !containsFocus) {
+      return;
+    }
+
+    setSelectedText(normalizedText);
   }
 
   async function handleSourceFeedback(
@@ -280,12 +303,14 @@ export default function SourceModal({
     }
 
     if (!selectedParagraph) {
-      setMessage("Bitte zuerst einen ganzen Paragraphen auswählen.");
+      setMessage("Bitte zuerst einen Paragraphen auswählen.");
       return;
     }
 
-    if (!selectedSection) {
-      setMessage("Bitte einen Abschnitt im Paragraphen auswählen.");
+    const textToSave = selectedText || selectedParagraph.full_text;
+
+    if (!textToSave.trim()) {
+      setMessage("Es konnte kein Text zum Speichern ermittelt werden.");
       return;
     }
 
@@ -307,15 +332,20 @@ export default function SourceModal({
           funktionsgruppe: selectedDocument.funktionsgruppe,
           pageNumber: selectedParagraph.page_number ?? null,
           paragraphIndex: selectedParagraph.paragraph_index ?? null,
-          text: selectedSection.chunk_text,
+          text: textToSave,
           fullText: selectedParagraph.full_text,
-          sectionIndex: selectedSectionIndex,
+          sectionIndex: null,
           similarity: null
         },
         userComment: customComment.trim() || undefined
       });
 
-      setMessage("Bevorzugte Quelle gespeichert.");
+      setMessage(
+        selectedText
+          ? "Markierte Textstelle als bevorzugte Quelle gespeichert."
+          : "Ganzer Paragraph als bevorzugte Quelle gespeichert."
+      );
+
       resetSelectMode();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Fehler beim Speichern.");
@@ -560,12 +590,12 @@ export default function SourceModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Ganzer Paragraph</label>
+                      <label className="text-sm font-medium">Paragraph / Textblock</label>
                       <select
                         value={selectedParagraphKey}
                         onChange={(e) => {
                           setSelectedParagraphKey(e.target.value);
-                          setSelectedSectionId("");
+                          setSelectedText("");
                         }}
                         className="w-full rounded-xl border px-3 py-2 text-sm"
                         disabled={!selectedItemId || paragraphsLoading || loading}
@@ -588,66 +618,55 @@ export default function SourceModal({
                     </div>
 
                     {selectedParagraph ? (
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="mb-2 text-sm font-medium text-slate-800">
-                          Ganzer Paragraph
+                      <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium text-slate-800">
+                            Tariftext
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={clearCurrentSelection}
+                            disabled={!selectedText || loading}
+                            className="rounded-lg border px-3 py-1.5 text-xs text-slate-700 hover:bg-white disabled:opacity-50"
+                          >
+                            Markierung löschen
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-slate-500">
+                          Du kannst im Text mit der Maus die passende Stelle
+                          markieren. Wenn nichts markiert ist, wird beim Speichern
+                          der ganze Paragraph übernommen.
                         </p>
-                        <div className="max-h-64 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                          {selectedParagraph.full_text}
+
+                        <div
+                          ref={paragraphTextRef}
+                          onMouseUp={handleParagraphTextSelection}
+                          className="max-h-[28rem] overflow-y-auto rounded-xl border bg-white p-4 text-sm leading-7 text-slate-800 whitespace-pre-wrap cursor-text select-text"
+                        >
+                          {selectedParagraph.full_text || "Kein Text vorhanden."}
                         </div>
                       </div>
                     ) : null}
 
-                    {selectedParagraph ? (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Abschnitt im Paragraphen
-                        </label>
-
-                        <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border p-3">
-                          {selectedParagraph.sections.length === 0 ? (
-                            <p className="text-sm text-slate-500">
-                              Keine Abschnitte vorhanden.
-                            </p>
-                          ) : (
-                            selectedParagraph.sections.map((section, index) => {
-                              const isSelected = selectedSectionId === section.id;
-
-                              return (
-                                <button
-                                  key={section.id}
-                                  type="button"
-                                  onClick={() => setSelectedSectionId(section.id)}
-                                  className={cx(
-                                    "w-full rounded-xl border p-3 text-left text-sm transition",
-                                    isSelected
-                                      ? "border-slate-900 bg-slate-100 ring-2 ring-slate-300"
-                                      : "border-slate-200 bg-white hover:bg-slate-50"
-                                  )}
-                                >
-                                  <div className="mb-2 text-xs text-slate-500">
-                                    Abschnitt {index + 1} · Seite{" "}
-                                    {section.page_number ?? "—"} · Absatz{" "}
-                                    {section.paragraph_index ?? "—"}
-                                  </div>
-                                  <div className="whitespace-pre-wrap leading-6 text-slate-800">
-                                    {section.chunk_text}
-                                  </div>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {selectedSection ? (
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                        <p className="mb-2 text-sm font-medium text-emerald-900">
-                          Ausgewählter Abschnitt
+                    {selectedText ? (
+                      <div className="rounded-xl border border-blue-300 bg-blue-50 p-4">
+                        <p className="mb-2 text-sm font-medium text-blue-900">
+                          Markierter Text
                         </p>
                         <div className="whitespace-pre-wrap text-sm leading-7 text-slate-800">
-                          {selectedSection.chunk_text}
+                          {selectedText}
+                        </div>
+                      </div>
+                    ) : selectedParagraph ? (
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-medium text-slate-800">
+                          Hinweis
+                        </p>
+                        <div className="text-sm leading-7 text-slate-600">
+                          Aktuell ist keine Textstelle markiert. Beim Speichern wird
+                          der gesamte ausgewählte Paragraph verwendet.
                         </div>
                       </div>
                     ) : null}
@@ -666,15 +685,12 @@ export default function SourceModal({
 
                     <button
                       type="submit"
-                      disabled={
-                        loading ||
-                        !selectedDocument ||
-                        !selectedParagraph ||
-                        !selectedSection
-                      }
+                      disabled={loading || !selectedDocument || !selectedParagraph}
                       className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
                     >
-                      Bevorzugte Quelle speichern
+                      {selectedText
+                        ? "Markierte Quelle speichern"
+                        : "Ganzen Paragraphen speichern"}
                     </button>
                   </form>
                 ) : (

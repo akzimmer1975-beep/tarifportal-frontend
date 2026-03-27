@@ -6,17 +6,19 @@ export type ApiDocument = {
   name: string;
   path: string;
   union_name: string | null;
-  tarif_type: string | null;
+  tarif_type?: string | null;
+  tariff_type?: string | null;
   tariffwerk: string | null;
   funktionsgruppe: string | null;
 };
 
 export type ApiParagraphSection = {
   id: string;
-  db_id: number;
-  page_number: number | null;
-  paragraph_index: number | null;
-  chunk_text: string;
+  label: string;
+  text: string;
+  level: number;
+  start_offset: number;
+  end_offset: number;
 };
 
 export type ApiParagraph = {

@@ -26,6 +26,28 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+function formatParagraphLabel(source: SourceItem | null) {
+  if (!source) return "—";
+
+  const from = source.paragraphFrom ?? null;
+  const to = source.paragraphTo ?? null;
+
+  if (from != null && to != null) {
+    return from === to ? String(from) : `${from}–${to}`;
+  }
+
+  if (source.paragraph != null) {
+    return String(source.paragraph);
+  }
+
+  return "—";
+}
+
+function formatSimilarity(value?: number | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toFixed(4);
+}
+
 export default function SourceModal({
   open,
   onClose,
@@ -159,6 +181,13 @@ export default function SourceModal({
     [paragraphs, selectedParagraphKey]
   );
 
+  const paragraphLabel = useMemo(() => formatParagraphLabel(source), [source]);
+
+  const displayFullText = source?.fullText || source?.text || "";
+  const displayCurrentText = source?.text || "";
+  const displayPreviousText = source?.previousText || "";
+  const displayNextText = source?.nextText || "";
+
   if (!open || !source) return null;
 
   function resetSelectMode() {
@@ -201,7 +230,7 @@ export default function SourceModal({
           funktionsgruppe: source.funktionsgruppe,
           pageNumber: source.page ?? null,
           paragraphIndex: source.paragraph ?? null,
-          text: source.text,
+          text: displayFullText || displayCurrentText,
           similarity: source.similarity ?? null
         }
       });
@@ -361,19 +390,46 @@ export default function SourceModal({
                 <strong>Seite:</strong> {source.page ?? "—"}
               </div>
               <div>
-                <strong>Paragraph / Absatz:</strong> {source.paragraph ?? "—"}
+                <strong>Paragraph / Absatz:</strong> {paragraphLabel}
               </div>
               <div>
-                <strong>Similarity:</strong> {source.similarity ?? "—"}
+                <strong>Similarity:</strong> {formatSimilarity(source.similarity)}
               </div>
             </div>
+
+            {displayPreviousText ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <h4 className="mb-2 font-medium text-amber-900">Vorheriger Absatz</h4>
+                <div className="max-h-[180px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                  {displayPreviousText}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="rounded-xl border border-blue-300 bg-blue-50 p-4">
+              <h4 className="mb-2 font-medium text-blue-900">Gefundener Absatz</h4>
+              <div className="max-h-[220px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-900">
+                {displayCurrentText || "Kein Text vorhanden."}
+              </div>
+            </div>
+
+            {displayNextText ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <h4 className="mb-2 font-medium text-emerald-900">
+                  Nachfolgender Absatz / Fortsetzung
+                </h4>
+                <div className="max-h-[180px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                  {displayNextText}
+                </div>
+              </div>
+            ) : null}
 
             <div className="rounded-xl border p-4">
               <h4 className="mb-3 font-medium text-slate-900">
                 Vollständiger Quellentext
               </h4>
               <div className="max-h-[380px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                {source.text || "Kein Text vorhanden."}
+                {displayFullText || "Kein Text vorhanden."}
               </div>
             </div>
 

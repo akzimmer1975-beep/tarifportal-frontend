@@ -19,6 +19,26 @@ type ModalState = {
   mode: "select" | "manual";
 };
 
+function formatParagraphLabel(source: SourceItem) {
+  const from = source.paragraphFrom ?? null;
+  const to = source.paragraphTo ?? null;
+
+  if (from != null && to != null) {
+    return from === to ? `§ / Abschnitt ${from}` : `§ / Abschnitt ${from}–${to}`;
+  }
+
+  if (source.paragraph != null) {
+    return `§ / Abschnitt ${source.paragraph}`;
+  }
+
+  return "";
+}
+
+function formatSimilarity(value?: number | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
+  return value.toFixed(4);
+}
+
 function SourceColumn({
   title,
   sources,
@@ -38,58 +58,63 @@ function SourceColumn({
         <p className="text-zinc-500">Keine Quellen vorhanden.</p>
       ) : (
         <ul className="space-y-3">
-          {sources.map((source, index) => (
-            <li
-              key={`${source.document}-${source.page ?? "x"}-${index}`}
-              className="rounded-xl bg-zinc-50 p-4"
-            >
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="text-base font-semibold text-zinc-950">
-                  {source.document}
+          {sources.map((source, index) => {
+            const similarityLabel = formatSimilarity(source.similarity);
+            const previewText = source.fullText || source.text;
+
+            return (
+              <li
+                key={`${source.document}-${source.page ?? "x"}-${index}`}
+                className="rounded-xl bg-zinc-50 p-4"
+              >
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className="text-base font-semibold text-zinc-950">
+                    {source.document}
+                  </p>
+
+                  {source.union ? (
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
+                      {source.union}
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="mt-1 text-xs text-zinc-500">
+                  {formatParagraphLabel(source)}
+                  {source.page != null ? ` · Seite ${source.page}` : ""}
                 </p>
 
-                {source.union ? (
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
-                    {source.union}
-                  </span>
-                ) : null}
-              </div>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
+                  {source.tarif ? <span>Tarif: {source.tarif}</span> : null}
+                  {source.tarifType ? <span>Typ: {source.tarifType}</span> : null}
+                  {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
+                  {similarityLabel ? <span>Similarity: {similarityLabel}</span> : null}
+                </div>
 
-              <p className="mt-1 text-xs text-zinc-500">
-                {source.paragraph != null ? `§ / Abschnitt ${source.paragraph}` : ""}
-                {source.page != null ? ` · Seite ${source.page}` : ""}
-              </p>
+                <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm italic leading-6 text-zinc-700">
+                  {previewText}
+                </p>
 
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
-                {source.tarif ? <span>Tarif: {source.tarif}</span> : null}
-                {source.tarifType ? <span>Typ: {source.tarifType}</span> : null}
-                {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
-                {source.similarity != null ? <span>Similarity: {source.similarity}</span> : null}
-              </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpen(source)}
+                    className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+                  >
+                    Tarifstelle anzeigen
+                  </button>
 
-              <p className="mt-3 line-clamp-4 text-sm italic leading-6 text-zinc-700">
-                {source.text}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => onOpen(source)}
-                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
-                >
-                  Tarifstelle anzeigen
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onOpenManual(source)}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
-                >
-                  Eigene Quelle eintragen
-                </button>
-              </div>
-            </li>
-          ))}
+                  <button
+                    type="button"
+                    onClick={() => onOpenManual(source)}
+                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+                  >
+                    Eigene Quelle eintragen
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </Card>

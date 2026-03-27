@@ -24,6 +24,7 @@ export type ApiParagraphSection = {
 export type ApiParagraph = {
   page_number: number | null;
   paragraph_index: number | null;
+  title: string | null; // ✅ WICHTIG NEU
   full_text: string;
   sections: ApiParagraphSection[];
 };
@@ -68,6 +69,7 @@ export async function getParagraphs(itemId: string): Promise<GetParagraphsRespon
   const res = await fetch(
     `${API_BASE}/api/documents/${encodeURIComponent(itemId)}/paragraphs`
   );
+
   const data = await parseJsonSafe(res);
 
   if (!res.ok || !data?.ok) {

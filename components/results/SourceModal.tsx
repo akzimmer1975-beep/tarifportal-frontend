@@ -344,368 +344,382 @@ export default function SourceModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 bg-black/50 p-3 sm:p-4"
       onClick={onClose}
     >
-      <div
-        className="max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Quelle prüfen</h3>
-            <p className="text-sm text-slate-500">
-              Volltext lesen, bewerten oder bessere Quelle auswählen
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
-          >
-            Schließen
-          </button>
-        </div>
-
-        <div className="grid gap-6 overflow-y-auto p-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-4">
-            <div className="rounded-xl border bg-slate-50 p-4 text-sm leading-7">
+      <div className="flex h-full items-center justify-center">
+        <div
+          className="flex h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="shrink-0 border-b px-4 py-4 sm:px-6">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <strong>Dokument:</strong> {source.document || "—"}
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Quelle prüfen
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Volltext lesen, bewerten oder bessere Quelle auswählen
+                </p>
               </div>
-              <div>
-                <strong>Gewerkschaft:</strong> {source.union || "—"}
-              </div>
-              <div>
-                <strong>Tarifart:</strong> {source.tarifType || "—"}
-              </div>
-              <div>
-                <strong>Tarifwerk:</strong> {source.tarif || "—"}
-              </div>
-              <div>
-                <strong>Funktionsgruppe:</strong> {source.funktionsgruppe || "—"}
-              </div>
-              <div>
-                <strong>Seite:</strong> {source.page ?? "—"}
-              </div>
-              <div>
-                <strong>Paragraph / Absatz:</strong> {paragraphLabel}
-              </div>
-              <div>
-                <strong>Similarity:</strong> {formatSimilarity(source.similarity)}
-              </div>
-            </div>
-
-            {displayPreviousText ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <h4 className="mb-2 font-medium text-amber-900">Vorheriger Absatz</h4>
-                <div className="max-h-[180px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-800">
-                  {displayPreviousText}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border border-blue-300 bg-blue-50 p-4">
-              <h4 className="mb-2 font-medium text-blue-900">Gefundener Absatz</h4>
-              <div className="max-h-[220px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-900">
-                {displayCurrentText || "Kein Text vorhanden."}
-              </div>
-            </div>
-
-            {displayNextText ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                <h4 className="mb-2 font-medium text-emerald-900">
-                  Nachfolgender Absatz / Fortsetzung
-                </h4>
-                <div className="max-h-[180px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-800">
-                  {displayNextText}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border p-4">
-              <h4 className="mb-3 font-medium text-slate-900">
-                Vollständiger Quellentext
-              </h4>
-              <div className="max-h-[380px] overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                {displayFullText || "Kein Text vorhanden."}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleSourceFeedback("relevant")}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
-                Quelle passt
-              </button>
 
               <button
                 type="button"
-                disabled={loading}
-                onClick={() => handleSourceFeedback("not_relevant")}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                onClick={onClose}
+                className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
               >
-                Quelle passt nicht
+                Schließen
               </button>
             </div>
           </div>
 
-          <div className="space-y-4 rounded-2xl border p-4">
-            <div>
-              <h4 className="font-medium text-slate-900">Bessere Quelle auswählen</h4>
-              <p className="mt-1 text-sm text-slate-500">
-                Du kannst eine vorhandene Quelle auswählen oder direkt selbst eine
-                Quelle eintragen.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("select");
-                  setMessage(null);
-                }}
-                className={cx(
-                  "rounded-xl px-3 py-2 text-sm font-medium",
-                  mode === "select"
-                    ? "bg-slate-900 text-white"
-                    : "border bg-white text-slate-700 hover:bg-slate-50"
-                )}
-              >
-                Auswahl
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("manual");
-                  setMessage(null);
-                }}
-                className={cx(
-                  "rounded-xl px-3 py-2 text-sm font-medium",
-                  mode === "manual"
-                    ? "bg-slate-900 text-white"
-                    : "border bg-white text-slate-700 hover:bg-slate-50"
-                )}
-              >
-                Eigene Quelle
-              </button>
-            </div>
-
-            {mode === "select" ? (
-              <form onSubmit={handlePreferredSourceSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Tarifvertrag</label>
-                  <select
-                    value={selectedItemId}
-                    onChange={(e) => setSelectedItemId(e.target.value)}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    disabled={documentsLoading || loading}
-                  >
-                    <option value="">
-                      {documentsLoading ? "Lade Dokumente ..." : "Bitte auswählen"}
-                    </option>
-                    {documents.map((doc) => (
-                      <option key={doc.item_id} value={doc.item_id}>
-                        {doc.name}
-                        {doc.union_name ? ` · ${doc.union_name}` : ""}
-                        {doc.tariffwerk ? ` · ${doc.tariffwerk}` : ""}
-                      </option>
-                    ))}
-                  </select>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="grid min-h-0 gap-6 p-4 sm:p-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="min-h-0 space-y-4">
+                <div className="rounded-xl border bg-slate-50 p-4 text-sm leading-7">
+                  <div>
+                    <strong>Dokument:</strong> {source.document || "—"}
+                  </div>
+                  <div>
+                    <strong>Gewerkschaft:</strong> {source.union || "—"}
+                  </div>
+                  <div>
+                    <strong>Tarifart:</strong> {source.tarifType || "—"}
+                  </div>
+                  <div>
+                    <strong>Tarifwerk:</strong> {source.tarif || "—"}
+                  </div>
+                  <div>
+                    <strong>Funktionsgruppe:</strong> {source.funktionsgruppe || "—"}
+                  </div>
+                  <div>
+                    <strong>Seite:</strong> {source.page ?? "—"}
+                  </div>
+                  <div>
+                    <strong>Paragraph / Absatz:</strong> {paragraphLabel}
+                  </div>
+                  <div>
+                    <strong>Similarity:</strong> {formatSimilarity(source.similarity)}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Paragraph / Absatz</label>
-                  <select
-                    value={selectedParagraphKey}
-                    onChange={(e) => setSelectedParagraphKey(e.target.value)}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    disabled={!selectedItemId || paragraphsLoading || loading}
-                  >
-                    <option value="">
-                      {paragraphsLoading
-                        ? "Lade Paragraphen ..."
-                        : "Bitte auswählen"}
-                    </option>
-                    {paragraphs.map((p, index) => {
-                      const key = `${p.page_number ?? ""}-${p.paragraph_index ?? ""}`;
-                      return (
-                        <option key={`${key}-${index}`} value={key}>
-                          Seite {p.page_number ?? "—"} · Absatz {p.paragraph_index ?? "—"}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                {selectedParagraph ? (
-                  <div className="rounded-xl bg-slate-50 p-4">
-                    <p className="mb-2 text-sm font-medium text-slate-700">
-                      Ausgewählter Text
-                    </p>
-                    <div className="max-h-52 overflow-y-auto whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                      {selectedParagraph.chunk_text}
+                {displayPreviousText ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <h4 className="mb-2 font-medium text-amber-900">
+                      Vorheriger Absatz
+                    </h4>
+                    <div className="whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                      {displayPreviousText}
                     </div>
                   </div>
                 ) : null}
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Kommentar / Hinweis</label>
-                  <textarea
-                    value={customComment}
-                    onChange={(e) => setCustomComment(e.target.value)}
-                    rows={4}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    placeholder="Optional: Warum ist diese Quelle aus deiner Sicht passender?"
+                <div className="rounded-xl border border-blue-300 bg-blue-50 p-4">
+                  <h4 className="mb-2 font-medium text-blue-900">
+                    Gefundener Absatz
+                  </h4>
+                  <div className="whitespace-pre-wrap text-sm leading-7 text-slate-900">
+                    {displayCurrentText || "Kein Text vorhanden."}
+                  </div>
+                </div>
+
+                {displayNextText ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                    <h4 className="mb-2 font-medium text-emerald-900">
+                      Nachfolgender Absatz / Fortsetzung
+                    </h4>
+                    <div className="whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                      {displayNextText}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="rounded-xl border p-4">
+                  <h4 className="mb-3 font-medium text-slate-900">
+                    Vollständiger Quellentext
+                  </h4>
+                  <div className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                    {displayFullText || "Kein Text vorhanden."}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
                     disabled={loading}
-                  />
-                </div>
+                    onClick={() => handleSourceFeedback("relevant")}
+                    className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    Quelle passt
+                  </button>
 
-                <button
-                  type="submit"
-                  disabled={loading || !selectedDocument || !selectedParagraph}
-                  className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  Bevorzugte Quelle speichern
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleManualSourceSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Dokumentname</label>
-                  <input
-                    type="text"
-                    value={manualDoc}
-                    onChange={(e) => setManualDoc(e.target.value)}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    placeholder="z. B. GDL_LfTV_..."
+                  <button
+                    type="button"
                     disabled={loading}
-                  />
+                    onClick={() => handleSourceFeedback("not_relevant")}
+                    className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  >
+                    Quelle passt nicht
+                  </button>
+                </div>
+              </div>
+
+              <div className="min-h-0 space-y-4 rounded-2xl border p-4">
+                <div>
+                  <h4 className="font-medium text-slate-900">
+                    Bessere Quelle auswählen
+                  </h4>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Du kannst eine vorhandene Quelle auswählen oder direkt selbst eine
+                    Quelle eintragen.
+                  </p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Gewerkschaft</label>
-                    <input
-                      type="text"
-                      value={manualUnion}
-                      onChange={(e) => setManualUnion(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="z. B. GDL"
-                      disabled={loading}
-                    />
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("select");
+                      setMessage(null);
+                    }}
+                    className={cx(
+                      "rounded-xl px-3 py-2 text-sm font-medium",
+                      mode === "select"
+                        ? "bg-slate-900 text-white"
+                        : "border bg-white text-slate-700 hover:bg-slate-50"
+                    )}
+                  >
+                    Auswahl
+                  </button>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Tarifart</label>
-                    <input
-                      type="text"
-                      value={manualTarifType}
-                      onChange={(e) => setManualTarifType(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="z. B. Tarifvertrag"
-                      disabled={loading}
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("manual");
+                      setMessage(null);
+                    }}
+                    className={cx(
+                      "rounded-xl px-3 py-2 text-sm font-medium",
+                      mode === "manual"
+                        ? "bg-slate-900 text-white"
+                        : "border bg-white text-slate-700 hover:bg-slate-50"
+                    )}
+                  >
+                    Eigene Quelle
+                  </button>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Tarifwerk</label>
-                    <input
-                      type="text"
-                      value={manualTariffwerk}
-                      onChange={(e) => setManualTariffwerk(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="z. B. LfTV"
-                      disabled={loading}
-                    />
-                  </div>
+                {mode === "select" ? (
+                  <form onSubmit={handlePreferredSourceSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Tarifvertrag</label>
+                      <select
+                        value={selectedItemId}
+                        onChange={(e) => setSelectedItemId(e.target.value)}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        disabled={documentsLoading || loading}
+                      >
+                        <option value="">
+                          {documentsLoading ? "Lade Dokumente ..." : "Bitte auswählen"}
+                        </option>
+                        {documents.map((doc) => (
+                          <option key={doc.item_id} value={doc.item_id}>
+                            {doc.name}
+                            {doc.union_name ? ` · ${doc.union_name}` : ""}
+                            {doc.tariffwerk ? ` · ${doc.tariffwerk}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Funktionsgruppe</label>
-                    <input
-                      type="text"
-                      value={manualFunktionsgruppe}
-                      onChange={(e) => setManualFunktionsgruppe(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="optional"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Paragraph / Absatz</label>
+                      <select
+                        value={selectedParagraphKey}
+                        onChange={(e) => setSelectedParagraphKey(e.target.value)}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        disabled={!selectedItemId || paragraphsLoading || loading}
+                      >
+                        <option value="">
+                          {paragraphsLoading
+                            ? "Lade Paragraphen ..."
+                            : "Bitte auswählen"}
+                        </option>
+                        {paragraphs.map((p, index) => {
+                          const key = `${p.page_number ?? ""}-${p.paragraph_index ?? ""}`;
+                          return (
+                            <option key={`${key}-${index}`} value={key}>
+                              Seite {p.page_number ?? "—"} · Absatz {p.paragraph_index ?? "—"}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Seite</label>
-                    <input
-                      type="number"
-                      value={manualPage}
-                      onChange={(e) => setManualPage(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="z. B. 35"
-                      disabled={loading}
-                    />
-                  </div>
+                    {selectedParagraph ? (
+                      <div className="rounded-xl bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-medium text-slate-700">
+                          Ausgewählter Text
+                        </p>
+                        <div className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                          {selectedParagraph.chunk_text}
+                        </div>
+                      </div>
+                    ) : null}
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Paragraph / Absatz</label>
-                    <input
-                      type="number"
-                      value={manualParagraph}
-                      onChange={(e) => setManualParagraph(e.target.value)}
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      placeholder="z. B. 642"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Kommentar / Hinweis</label>
+                      <textarea
+                        value={customComment}
+                        onChange={(e) => setCustomComment(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        placeholder="Optional: Warum ist diese Quelle aus deiner Sicht passender?"
+                        disabled={loading}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Tariftext</label>
-                  <textarea
-                    value={manualText}
-                    onChange={(e) => setManualText(e.target.value)}
-                    rows={6}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    placeholder="Hier den passenden Tariftext einfügen ..."
-                    disabled={loading}
-                  />
-                </div>
+                    <button
+                      type="submit"
+                      disabled={loading || !selectedDocument || !selectedParagraph}
+                      className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      Bevorzugte Quelle speichern
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleManualSourceSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Dokumentname</label>
+                      <input
+                        type="text"
+                        value={manualDoc}
+                        onChange={(e) => setManualDoc(e.target.value)}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        placeholder="z. B. GDL_LfTV_..."
+                        disabled={loading}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Kommentar / Hinweis</label>
-                  <textarea
-                    value={manualComment}
-                    onChange={(e) => setManualComment(e.target.value)}
-                    rows={4}
-                    className="w-full rounded-xl border px-3 py-2 text-sm"
-                    placeholder="Optional: Warum ist diese Quelle aus deiner Sicht passend?"
-                    disabled={loading}
-                  />
-                </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Gewerkschaft</label>
+                        <input
+                          type="text"
+                          value={manualUnion}
+                          onChange={(e) => setManualUnion(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="z. B. GDL"
+                          disabled={loading}
+                        />
+                      </div>
 
-                <button
-                  type="submit"
-                  disabled={loading || !manualDoc.trim() || !manualText.trim()}
-                  className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  Eigene Quelle speichern
-                </button>
-              </form>
-            )}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Tarifart</label>
+                        <input
+                          type="text"
+                          value={manualTarifType}
+                          onChange={(e) => setManualTarifType(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="z. B. Tarifvertrag"
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
 
-            {message ? (
-              <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
-                {message}
-              </p>
-            ) : null}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Tarifwerk</label>
+                        <input
+                          type="text"
+                          value={manualTariffwerk}
+                          onChange={(e) => setManualTariffwerk(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="z. B. LfTV"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Funktionsgruppe</label>
+                        <input
+                          type="text"
+                          value={manualFunktionsgruppe}
+                          onChange={(e) => setManualFunktionsgruppe(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="optional"
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Seite</label>
+                        <input
+                          type="number"
+                          value={manualPage}
+                          onChange={(e) => setManualPage(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="z. B. 35"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Paragraph / Absatz</label>
+                        <input
+                          type="number"
+                          value={manualParagraph}
+                          onChange={(e) => setManualParagraph(e.target.value)}
+                          className="w-full rounded-xl border px-3 py-2 text-sm"
+                          placeholder="z. B. 642"
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Tariftext</label>
+                      <textarea
+                        value={manualText}
+                        onChange={(e) => setManualText(e.target.value)}
+                        rows={6}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        placeholder="Hier den passenden Tariftext einfügen ..."
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Kommentar / Hinweis</label>
+                      <textarea
+                        value={manualComment}
+                        onChange={(e) => setManualComment(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-xl border px-3 py-2 text-sm"
+                        placeholder="Optional: Warum ist diese Quelle aus deiner Sicht passend?"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || !manualDoc.trim() || !manualText.trim()}
+                      className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      Eigene Quelle speichern
+                    </button>
+                  </form>
+                )}
+
+                {message ? (
+                  <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                    {message}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>

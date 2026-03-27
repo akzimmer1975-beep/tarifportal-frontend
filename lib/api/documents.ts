@@ -11,38 +11,71 @@ export type ApiDocument = {
   funktionsgruppe: string | null;
 };
 
-export type ApiParagraph = {
+export type ApiParagraphSection = {
+  id: string;
+  db_id: number;
   page_number: number | null;
   paragraph_index: number | null;
   chunk_text: string;
 };
 
-export async function getDocuments() {
-  const res = await fetch(`${API_BASE}/api/documents`);
-  const data = await res.json();
+export type ApiParagraph = {
+  page_number: number | null;
+  paragraph_index: number | null;
+  full_text: string;
+  sections: ApiParagraphSection[];
+};
 
-  if (!res.ok || !data.ok) {
-    throw new Error(data.error || "Dokumente konnten nicht geladen werden.");
+export type GetDocumentsResponse = {
+  ok: true;
+  count: number;
+  documents: ApiDocument[];
+};
+
+export type GetParagraphsResponse = {
+  ok: true;
+  itemId: string;
+  count: number;
+  paragraphs: ApiParagraph[];
+};
+
+async function parseJsonSafe(res: Response) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getDocuments(): Promise<GetDocumentsResponse> {
+  const res = await fetch(`${API_BASE}/api/documents`);
+  const data = await parseJsonSafe(res);
+
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || "Dokumente konnten nicht geladen werden.");
   }
 
-  return data as {
-    ok: true;
-    count: number;
-    documents: ApiDocument[];
+  return {
+    ok: true,
+    count: Array.isArray(data.documents) ? data.documents.length : 0,
+    documents: Array.isArray(data.documents) ? data.documents : []
   };
 }
 
-export async function getParagraphs(itemId: string) {
-  const res = await fetch(`${API_BASE}/api/documents/${itemId}/paragraphs`);
-  const data = await res.json();
+export async function getParagraphs(itemId: string): Promise<GetParagraphsResponse> {
+  const res = await fetch(
+    `${API_BASE}/api/documents/${encodeURIComponent(itemId)}/paragraphs`
+  );
+  const data = await parseJsonSafe(res);
 
-  if (!res.ok || !data.ok) {
-    throw new Error(data.error || "Paragraphen konnten nicht geladen werden.");
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || "Paragraphen konnten nicht geladen werden.");
   }
 
-  return data as {
-    ok: true;
-    count: number;
-    paragraphs: ApiParagraph[];
+  return {
+    ok: true,
+    itemId: typeof data.itemId === "string" ? data.itemId : itemId,
+    count: Array.isArray(data.paragraphs) ? data.paragraphs.length : 0,
+    paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : []
   };
 }

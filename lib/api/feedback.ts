@@ -4,23 +4,50 @@ const API_BASE =
 export type FeedbackSourcePayload = {
   documentName: string;
   unionName?: string | null;
-  tariffType?: string | null;
+  tarifType?: string | null;
+  tariffwerk?: string | null;
+  funktionsgruppe?: string | null;
+  pageNumber?: number | null;
+  paragraphIndex?: number | null;
+
+  text: string; // ausgewählter Abschnitt
+  fullText?: string | null; // ganzer Paragraph
+  sectionIndex?: number | null; // Position des Abschnitts im Paragraphen
+
+  similarity?: number | null;
+};
+
+export type FeedbackCustomSourcePayload = {
+  documentName: string;
+  unionName?: string | null;
+  tarifType?: string | null;
   tariffwerk?: string | null;
   funktionsgruppe?: string | null;
   pageNumber?: number | null;
   paragraphIndex?: number | null;
   text: string;
-  similarity?: number | null;
+  comment?: string | null;
 };
 
-export type CreateFeedbackPayload = {
-  queryText: string;
-  topicKey?: string;
-  sectionKey?: string;
-  targetType: "source";
-  feedbackType: "relevant" | "preferred" | "not_relevant";
-  source: FeedbackSourcePayload;
-};
+export type CreateFeedbackPayload =
+  | {
+      queryText: string;
+      topicKey?: string;
+      sectionKey?: string;
+      targetType: "source";
+      feedbackType: "relevant" | "preferred" | "not_relevant";
+      source: FeedbackSourcePayload;
+      userComment?: string;
+    }
+  | {
+      queryText: string;
+      topicKey?: string;
+      sectionKey?: string;
+      targetType: "custom_source";
+      feedbackType: "custom_source";
+      customSource: FeedbackCustomSourcePayload;
+      userComment?: string;
+    };
 
 export async function sendFeedback(payload: CreateFeedbackPayload) {
   const res = await fetch(`${API_BASE}/api/feedback`, {
@@ -31,9 +58,9 @@ export async function sendFeedback(payload: CreateFeedbackPayload) {
     body: JSON.stringify(payload)
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => null);
 
-  if (!res.ok || !data.ok) {
+  if (!res.ok || !data?.ok) {
     const message =
       data?.errors?.join?.(", ") ||
       data?.error ||

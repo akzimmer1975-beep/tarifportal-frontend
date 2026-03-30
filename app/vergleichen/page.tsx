@@ -1,9 +1,8 @@
-console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
 import CompareColumns from "@/components/results/CompareColumns";
 import CompareHeader from "@/components/results/CompareHeader";
 import SourcesSection from "@/components/results/SourcesSection";
 import TextListSection from "@/components/results/TextListSection";
-import { askTarif } from "@/lib/api";
+import { askTarifQuestion } from "@/lib/api";
 
 type ComparePageProps = {
   searchParams: Promise<{
@@ -31,7 +30,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   }
 
   try {
-    const result = await askTarif(query);
+    const result = await askTarifQuestion(query);
 
     return (
       <main className="min-h-screen bg-zinc-50">

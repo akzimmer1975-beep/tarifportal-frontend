@@ -53,7 +53,7 @@ export default function SourceModal({
   if (!open || !source) return null;
 
   const similarityLabel = formatSimilarity(source.similarity);
-  const displayText = source.fullText || source.text || "Kein Text vorhanden.";
+  const displayText = source.text || "Kein Text vorhanden.";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
@@ -152,25 +152,13 @@ export default function SourceModal({
 
           <section className="rounded-2xl border border-zinc-200 bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-              Volltext / Fundstelle
+              Fundstelle
             </h3>
 
             <div className="mt-3 whitespace-pre-wrap rounded-2xl bg-zinc-50 p-4 text-sm leading-7 text-zinc-800">
               {displayText}
             </div>
           </section>
-
-          {source.text && source.fullText && source.text !== source.fullText ? (
-            <section className="rounded-2xl border border-zinc-200 bg-white p-5">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-                Treffer-Auszug
-              </h3>
-
-              <div className="mt-3 whitespace-pre-wrap rounded-2xl bg-zinc-50 p-4 text-sm leading-7 text-zinc-800">
-                {source.text}
-              </div>
-            </section>
-          ) : null}
         </div>
       </div>
     </div>

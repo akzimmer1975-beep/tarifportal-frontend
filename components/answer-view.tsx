@@ -12,6 +12,56 @@ type AnswerViewProps = {
   result: ChatResponseBody;
 };
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function normalizeText(value: unknown, fallback: string): string {
+  if (isNonEmptyString(value)) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    const items = value.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0
+    );
+
+    if (items.length > 0) {
+      return items.join("\n\n");
+    }
+  }
+
+  return fallback;
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0
+    );
+  }
+
+  if (isNonEmptyString(value)) {
+    return [value];
+  }
+
+  return [];
+}
+
+function normalizeSources(value: unknown): SourceItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (item): item is SourceItem =>
+      typeof item === "object" &&
+      item !== null &&
+      "document" in item &&
+      typeof item.document === "string"
+  );
+}
+
 function SingleAnswerSection({ answer }: { answer: string }) {
   return (
     <section className="space-y-4">
@@ -82,22 +132,51 @@ function SingleSourcesSection({ sources }: { sources: SourceItem[] }) {
 
 export function AnswerView({ query, result }: AnswerViewProps) {
   const mode = result.mode;
-  const sources = result.sources ?? [];
-  const sourcesByUnion = result.sourcesByUnion ?? { GDL: [], EVG: [] };
+  const sources = normalizeSources(result.sources);
+  const rawSourcesByUnion = result.sourcesByUnion ?? { GDL: [], EVG: [] };
 
-  const structured = result.structured ?? {
-    kurzfazit: result.answer,
-    gdl:
-      mode === "compare"
-        ? "Keine explizite tarifliche Regelung gefunden."
-        : result.answer,
-    evg:
-      mode === "compare"
-        ? "Keine explizite tarifliche Regelung gefunden."
-        : result.answer,
-    unterschiede: [],
-    gemeinsamkeiten: []
+  const sourcesByUnion = {
+    GDL: normalizeSources(rawSourcesByUnion.GDL),
+    EVG: normalizeSources(rawSourcesByUnion.EVG),
   };
+
+  const structured =
+    result.structured && typeof result.structured === "object"
+      ? result.structured
+      : undefined;
+
+  const kurzfazit = normalizeText(
+    structured?.kurzfazit,
+    isNonEmptyString(result.answer) ? result.answer : "Kein Kurzfazit vorhanden."
+  );
+
+  const gdl = normalizeText(
+    structured?.gdl,
+    mode === "compare"
+      ? "Keine GDL-Angaben vorhanden."
+      : isNonEmptyString(result.answer)
+        ? result.answer
+        : "Keine GDL-Angaben vorhanden."
+  );
+
+  const evg = normalizeText(
+    structured?.evg,
+    mode === "compare"
+      ? "Keine EVG-Angaben vorhanden."
+      : isNonEmptyString(result.answer)
+        ? result.answer
+        : "Keine EVG-Angaben vorhanden."
+  );
+
+  const unterschiede = normalizeStringArray(structured?.unterschiede);
+  const gemeinsamkeiten = normalizeStringArray(structured?.gemeinsamkeiten);
+
+  const topicKey =
+    structured &&
+    "topicKey" in structured &&
+    typeof structured.topicKey === "string"
+      ? structured.topicKey
+      : undefined;
 
   if (mode === "single") {
     return (
@@ -119,7 +198,9 @@ export function AnswerView({ query, result }: AnswerViewProps) {
             </p>
           </Card>
 
-          <SingleAnswerSection answer={result.answer} />
+          <SingleAnswerSection
+            answer={normalizeText(result.answer, "Keine Antwort vorhanden.")}
+          />
           <SingleSourcesSection sources={sources} />
         </div>
       </main>
@@ -131,16 +212,18 @@ export function AnswerView({ query, result }: AnswerViewProps) {
       <div className="mx-auto max-w-6xl space-y-6">
         <BackHomeButton />
 
-        <CompareHeader query={query} kurzfazit={structured.kurzfazit} />
+        <CompareHeader query={query} kurzfazit={kurzfazit} />
 
-        <CompareColumns gdl={structured.gdl} evg={structured.evg} />
+        <CompareColumns gdl={gdl} evg={evg} />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <DifferencesList items={structured.unterschiede} />
-          <SimilaritiesList items={structured.gemeinsamkeiten} />
+          <DifferencesList items={unterschiede} />
+          <SimilaritiesList items={gemeinsamkeiten} />
         </div>
 
         <SourcesSection
+          query={query}
+          topicKey={topicKey}
           gdlSources={sourcesByUnion.GDL}
           evgSources={sourcesByUnion.EVG}
         />

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
 
 export default function HomePage() {
@@ -14,6 +15,15 @@ export default function HomePage() {
               Stelle eine Frage zu Ruhezeiten, Entgelt, Eingruppierung, Arbeitszeit oder
               tariflichen Unterschieden zwischen GDL und EVG.
             </p>
+          </div>
+
+          <div className="mb-6 flex flex-wrap gap-3">
+            <Link
+              href="/expert/login"
+              className="rounded-xl border border-neutral-300 px-4 py-3 text-sm font-medium hover:border-neutral-500"
+            >
+              Expertenbereich
+            </Link>
           </div>
 
           <SearchForm />

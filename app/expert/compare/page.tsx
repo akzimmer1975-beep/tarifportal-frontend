@@ -40,7 +40,7 @@ export default function ExpertComparePage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            question,
+            query: question,
             compareUnions: true,
             mode: "expert",
           }),

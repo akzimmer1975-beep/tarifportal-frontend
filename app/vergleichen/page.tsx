@@ -80,6 +80,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       ? structured.gemeinsamkeiten
       : [];
 
+    const topicKey =
+      structured &&
+      "topicKey" in structured &&
+      typeof structured.topicKey === "string"
+        ? structured.topicKey
+        : undefined;
+
     return (
       <main className="min-h-screen bg-zinc-50">
         <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
@@ -99,7 +106,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
           <SourcesSection
             query={query}
-            topicKey={structured?.topicKey}
+            topicKey={topicKey}
             gdlSources={normalizeSources(result.sourcesByUnion?.GDL || [], "GDL")}
             evgSources={normalizeSources(result.sourcesByUnion?.EVG || [], "EVG")}
           />

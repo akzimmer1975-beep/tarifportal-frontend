@@ -1,8 +1,7 @@
 import CompareColumns from "@/components/results/CompareColumns";
 import CompareHeader from "@/components/results/CompareHeader";
-import DifferencesList from "@/components/results/DifferencesList";
-import SimilaritiesList from "@/components/results/SimilaritiesList";
 import SourcesSection from "@/components/results/SourcesSection";
+import TextListSection from "@/components/results/TextListSection";
 import { BackHomeButton } from "@/components/back-home-button";
 import Card from "@/components/ui/Card";
 import type { ChatResponseBody, SourceItem } from "@/types/chat";
@@ -217,8 +216,8 @@ export function AnswerView({ query, result }: AnswerViewProps) {
         <CompareColumns gdl={gdl} evg={evg} />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <DifferencesList items={unterschiede} />
-          <SimilaritiesList items={gemeinsamkeiten} />
+          <TextListSection title="Unterschiede" items={unterschiede} />
+          <TextListSection title="Gemeinsamkeiten" items={gemeinsamkeiten} />
         </div>
 
         <SourcesSection

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import SourceModal from "./SourceModal";
-import { SourceItem } from "@/types/chat";
+import type { SourceItem } from "@/types/chat";
 
 type SourcesSectionProps = {
   query: string;
@@ -20,13 +20,6 @@ type ModalState = {
 };
 
 function formatParagraphLabel(source: SourceItem) {
-  const from = source.paragraphFrom ?? null;
-  const to = source.paragraphTo ?? null;
-
-  if (from != null && to != null) {
-    return from === to ? `§ / Abschnitt ${from}` : `§ / Abschnitt ${from}–${to}`;
-  }
-
   if (source.paragraph != null) {
     return `§ / Abschnitt ${source.paragraph}`;
   }
@@ -43,7 +36,7 @@ function SourceColumn({
   title,
   sources,
   onOpen,
-  onOpenManual
+  onOpenManual,
 }: {
   title: string;
   sources: SourceItem[];
@@ -60,7 +53,7 @@ function SourceColumn({
         <ul className="space-y-3">
           {sources.map((source, index) => {
             const similarityLabel = formatSimilarity(source.similarity);
-            const previewText = source.fullText || source.text;
+            const previewText = source.text || "Kein Text vorhanden.";
 
             return (
               <li
@@ -127,11 +120,11 @@ export default function SourcesSection({
   sectionKey,
   title = "Quellen",
   gdlSources,
-  evgSources
+  evgSources,
 }: SourcesSectionProps) {
   const [modalState, setModalState] = useState<ModalState>({
     source: null,
-    mode: "select"
+    mode: "select",
   });
 
   return (
@@ -148,6 +141,7 @@ export default function SourcesSection({
             onOpen={(source) => setModalState({ source, mode: "select" })}
             onOpenManual={(source) => setModalState({ source, mode: "manual" })}
           />
+
           <SourceColumn
             title="EVG-Quellen"
             sources={evgSources}

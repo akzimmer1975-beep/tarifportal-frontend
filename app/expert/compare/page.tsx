@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import ExpertGate from "@/components/auth/ExpertGate";
 import ExpertAnswerView from "@/components/expert/ExpertAnswerView";
 import type { ExpertChatResponse } from "@/types/expert";
+
+type ExpertComparePageProps = {
+  searchParams: Promise<{
+    q?: string;
+  }>;
+};
 
 function getApiBaseUrl() {
   return (
@@ -15,10 +20,16 @@ function getApiBaseUrl() {
   );
 }
 
-export default function ExpertComparePage() {
-  const searchParams = useSearchParams();
-  const question = useMemo(() => searchParams.get("q")?.trim() || "", [searchParams]);
+export default async function ExpertComparePage({
+  searchParams,
+}: ExpertComparePageProps) {
+  const params = await searchParams;
+  const question = params.q?.trim() || "";
 
+  return <ExpertCompareClient question={question} />;
+}
+
+function ExpertCompareClient({ question }: { question: string }) {
   const [data, setData] = useState<ExpertChatResponse | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);

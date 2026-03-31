@@ -30,28 +30,47 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
   try {
     const result = await askTarifQuestion(query);
-    const sections = Array.isArray(result.sections) ? result.sections : [];
+
+    const sections =
+      "sections" in result && Array.isArray(result.sections)
+        ? result.sections
+        : [];
+
+    const structured =
+      result.structured && typeof result.structured === "object"
+        ? result.structured
+        : undefined;
+
+    const kurzfazit =
+      structured && "kurzfazit" in structured && typeof structured.kurzfazit === "string"
+        ? structured.kurzfazit
+        : "Kein Kurzfazit vorhanden.";
+
+    const topicKey =
+      structured && "topicKey" in structured && typeof structured.topicKey === "string"
+        ? structured.topicKey
+        : undefined;
+
+    const gemeinsamkeiten =
+      structured &&
+      "gemeinsamkeiten" in structured &&
+      Array.isArray(structured.gemeinsamkeiten)
+        ? structured.gemeinsamkeiten
+        : [];
 
     return (
       <main className="min-h-screen bg-zinc-50">
         <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
-          <CompareHeader
-            query={query}
-            kurzfazit={result.structured?.kurzfazit || "Kein Kurzfazit vorhanden."}
-          />
+          <CompareHeader query={query} kurzfazit={kurzfazit} />
 
-          <CompareSections
-            query={query}
-            topicKey={result.structured?.topicKey}
-            sections={sections}
-          />
+          <CompareSections query={query} topicKey={topicKey} sections={sections} />
 
-          <SimilaritiesList items={result.structured?.gemeinsamkeiten || []} />
+          <SimilaritiesList items={gemeinsamkeiten} />
         </div>
       </main>
     );
   } catch (error) {
-    console.error(error);
+    console.error("ComparePage Error:", error);
 
     return (
       <main className="min-h-screen bg-zinc-50 px-6 py-10">

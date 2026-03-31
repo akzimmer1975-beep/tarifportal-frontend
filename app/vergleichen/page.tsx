@@ -10,6 +10,26 @@ type ComparePageProps = {
   }>;
 };
 
+function normalizeSources(
+  sources: any[],
+  union: "GDL" | "EVG"
+) {
+  return sources.map((s) => ({
+    document: s.document ?? s.documentName ?? "Unbekannt",
+    union: s.union ?? union,
+    text: s.text ?? s.excerpt ?? "",
+    fullText: s.fullText ?? s.full_text ?? "",
+    page: s.page ?? s.pageNumber,
+    paragraph: s.paragraph,
+    paragraphFrom: s.paragraphFrom,
+    paragraphTo: s.paragraphTo,
+    tarif: s.tarif ?? s.tariffwerk,
+    tarifType: s.tarifType ?? s.tariffType,
+    funktionsgruppe: s.funktionsgruppe,
+    similarity: s.similarity,
+  }));
+}
+
 export default async function ComparePage({ searchParams }: ComparePageProps) {
   const params = await searchParams;
   const query = params.query?.trim() || "";
@@ -32,32 +52,56 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   try {
     const result = await askTarifQuestion(query);
 
+    const structured =
+      result?.structured && typeof result.structured === "object"
+        ? result.structured
+        : undefined;
+
+    const kurzfazit =
+      typeof structured?.kurzfazit === "string"
+        ? structured.kurzfazit
+        : "Kein Kurzfazit vorhanden.";
+
+    const gdl =
+      Array.isArray(structured?.gdl) || typeof structured?.gdl === "string"
+        ? structured.gdl
+        : "Keine GDL-Angaben vorhanden.";
+
+    const evg =
+      Array.isArray(structured?.evg) || typeof structured?.evg === "string"
+        ? structured.evg
+        : "Keine EVG-Angaben vorhanden.";
+
+    const unterschiede = Array.isArray(structured?.unterschiede)
+      ? structured.unterschiede
+      : [];
+
+    const gemeinsamkeiten = Array.isArray(structured?.gemeinsamkeiten)
+      ? structured.gemeinsamkeiten
+      : [];
+
     return (
       <main className="min-h-screen bg-zinc-50">
         <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
-          <CompareHeader
-            query={query}
-            kurzfazit={result.structured?.kurzfazit || "Kein Kurzfazit vorhanden."}
-          />
+          <CompareHeader query={query} kurzfazit={kurzfazit} />
 
-          <CompareColumns
-            gdl={result.structured?.gdl || "Keine GDL-Angaben vorhanden."}
-            evg={result.structured?.evg || "Keine EVG-Angaben vorhanden."}
-          />
+          <CompareColumns gdl={gdl} evg={evg} />
 
           <TextListSection
             title="Unterschiede"
-            items={result.structured?.unterschiede || []}
+            items={unterschiede}
           />
 
           <TextListSection
             title="Gemeinsamkeiten"
-            items={result.structured?.gemeinsamkeiten || []}
+            items={gemeinsamkeiten}
           />
 
           <SourcesSection
-            gdlSources={result.sourcesByUnion?.GDL || []}
-            evgSources={result.sourcesByUnion?.EVG || []}
+            query={query}
+            topicKey={structured?.topicKey}
+            gdlSources={normalizeSources(result.sourcesByUnion?.GDL || [], "GDL")}
+            evgSources={normalizeSources(result.sourcesByUnion?.EVG || [], "EVG")}
           />
         </div>
       </main>

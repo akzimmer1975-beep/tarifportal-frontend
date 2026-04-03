@@ -19,9 +19,138 @@ type ModalState = {
   mode: "select" | "manual";
 };
 
-function formatParagraphLabel(source: SourceItem) {
-  if (source.paragraph != null) {
-    return `§ / Abschnitt ${source.paragraph}`;
+type LooseSource = SourceItem & Record<string, unknown>;
+
+function pickString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function pickNumber(...values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === "number" && !Number.isNaN(value)) {
+      return value;
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getDocumentName(source: LooseSource): string {
+  return (
+    pickString(
+      source.document,
+      source.documentName,
+      source.document_name,
+      source.source_document_name,
+      source.name,
+      source.title
+    ) ?? "Unbekannte Quelle"
+  );
+}
+
+function getPreviewText(source: LooseSource): string {
+  return (
+    pickString(
+      source.text,
+      source.sourceText,
+      source.source_text,
+      source.excerpt,
+      source.quote,
+      source.chunk_text,
+      source.full_text,
+      source.source_full_text
+    ) ?? "Kein Auszug vorhanden."
+  );
+}
+
+function getUnion(source: LooseSource): string | null {
+  return pickString(
+    source.union,
+    source.unionName,
+    source.union_name,
+    source.source_union_name
+  );
+}
+
+function getTarif(source: LooseSource): string | null {
+  return pickString(
+    source.tarif,
+    source.tariffwerk,
+    source.tariffWerk,
+    source.source_tariffwerk
+  );
+}
+
+function getTariffType(source: LooseSource): string | null {
+  return pickString(
+    source.tarifType,
+    source.tariffType,
+    source.tariff_type,
+    source.source_tarif_type,
+    source.source_tariff_type
+  );
+}
+
+function getFunktionsgruppe(source: LooseSource): string | null {
+  return pickString(
+    source.funktionsgruppe,
+    source.funktionsGruppe,
+    source.source_funktionsgruppe
+  );
+}
+
+function getPage(source: LooseSource): number | null {
+  return pickNumber(
+    source.page,
+    source.pageNumber,
+    source.page_number,
+    source.source_page_number
+  );
+}
+
+function getParagraph(source: LooseSource): number | null {
+  return pickNumber(
+    source.paragraph,
+    source.paragraphIndex,
+    source.paragraph_index,
+    source.source_paragraph_index
+  );
+}
+
+function getSectionLabel(source: LooseSource): string | null {
+  return pickString(source.sectionLabel, source.section_label);
+}
+
+function getSimilarity(source: LooseSource): number | null {
+  return pickNumber(source.similarity, source.score, source.source_similarity);
+}
+
+function formatParagraphLabel(source: LooseSource) {
+  const paragraph = getParagraph(source);
+  const sectionLabel = getSectionLabel(source);
+
+  if (paragraph != null && sectionLabel) {
+    return `Abs. ${paragraph} · ${sectionLabel}`;
+  }
+
+  if (paragraph != null) {
+    return `Abs. ${paragraph}`;
+  }
+
+  if (sectionLabel) {
+    return sectionLabel;
   }
 
   return "";
@@ -52,35 +181,44 @@ function SourceColumn({
       ) : (
         <ul className="space-y-3">
           {sources.map((source, index) => {
-            const similarityLabel = formatSimilarity(source.similarity);
-            const previewText = source.text || "Kein Text vorhanden.";
+            const looseSource = source as LooseSource;
+
+            const documentName = getDocumentName(looseSource);
+            const unionLabel = getUnion(looseSource);
+            const previewText = getPreviewText(looseSource);
+            const similarityLabel = formatSimilarity(getSimilarity(looseSource));
+            const page = getPage(looseSource);
+            const paragraphLabel = formatParagraphLabel(looseSource);
+            const tarif = getTarif(looseSource);
+            const tariffType = getTariffType(looseSource);
+            const funktionsgruppe = getFunktionsgruppe(looseSource);
 
             return (
               <li
-                key={`${source.document}-${source.page ?? "x"}-${index}`}
+                key={`${documentName}-${page ?? "x"}-${index}`}
                 className="rounded-xl bg-zinc-50 p-4"
               >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <p className="text-base font-semibold text-zinc-950">
-                    {source.document}
+                    {documentName}
                   </p>
 
-                  {source.union ? (
+                  {unionLabel ? (
                     <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
-                      {source.union}
+                      {unionLabel}
                     </span>
                   ) : null}
                 </div>
 
                 <p className="mt-1 text-xs text-zinc-500">
-                  {formatParagraphLabel(source)}
-                  {source.page != null ? ` · Seite ${source.page}` : ""}
+                  {paragraphLabel}
+                  {page != null ? `${paragraphLabel ? " · " : ""}Seite ${page}` : ""}
                 </p>
 
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
-                  {source.tarif ? <span>Tarif: {source.tarif}</span> : null}
-                  {source.tarifType ? <span>Typ: {source.tarifType}</span> : null}
-                  {source.funktionsgruppe ? <span>FG: {source.funktionsgruppe}</span> : null}
+                  {tarif ? <span>Tarif: {tarif}</span> : null}
+                  {tariffType ? <span>Typ: {tariffType}</span> : null}
+                  {funktionsgruppe ? <span>FG: {funktionsgruppe}</span> : null}
                   {similarityLabel ? <span>Similarity: {similarityLabel}</span> : null}
                 </div>
 
